@@ -8,6 +8,7 @@ import { createScrollConductor } from './conductor/scrollConductor.js';
 import { createSynthAudio } from './audio/synthAudio.js';
 import { createClouds } from './world/clouds.js';
 import { createCelestial } from './world/celestial.js';
+import { createSatelliteIslands } from './world/satelliteIslands.js';
 
 // DOM Elements
 const canvas = document.getElementById('webgl');
@@ -31,6 +32,7 @@ scene.add(tower.group);
 const particles = createParticles(scene, tower.chimneyOrigin, tower.cauldronOrigin);
 const clouds = createClouds(scene);
 const celestial = createCelestial(scene);
+const satelliteIslands = createSatelliteIslands(scene);
 const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
@@ -324,6 +326,7 @@ function animate(currentTime) {
 
   // Update floating island breathing bob
   tower.update(time, dt);
+  satelliteIslands.update(time, dt);
 
   // Update chimney puffs, cauldron bubbles, sky motes
   particles.update(dt, time);
