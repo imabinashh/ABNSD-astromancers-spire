@@ -24,6 +24,7 @@ const menuOrbitBtn = document.getElementById('menu-orbit-btn');
 
 // Top-Right Controls DOM
 const themeBtns = document.querySelectorAll('.theme-pill-btn');
+const cameraOrbitBtn = document.getElementById('camera-orbit-btn');
 const audioToggleBtn = document.getElementById('audio-toggle-btn');
 const soundIconOn = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-on') : null;
 const soundIconOff = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-off') : null;
@@ -32,6 +33,14 @@ const soundIconOff = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-
 const aboutModal = document.getElementById('about-modal');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const landmarkToast = document.getElementById('landmark-toast');
+
+// Floating Camera HUD DOM
+const cameraControlsHud = document.getElementById('camera-controls-hud');
+const camResetBtn = document.getElementById('cam-reset-btn');
+const camZoomInBtn = document.getElementById('cam-zoom-in-btn');
+const camZoomOutBtn = document.getElementById('cam-zoom-out-btn');
+const camRotateLeftBtn = document.getElementById('cam-rotate-left-btn');
+const camRotateRightBtn = document.getElementById('cam-rotate-right-btn');
 
 // 1. Initialize 3D World Core
 const { scene, camera, renderer, controls, update: updateScene } = createScene(canvas);
@@ -115,9 +124,8 @@ function flyToWaypoint(camPos, targetPos, fov, toastText) {
 
 // 2. Initialize Scroll Conductor
 const conductor = createScrollConductor({
-  sectionCount: 8,
-  dampingFactor: 0.08,
-  onProgressUpdate(progress, rawScrollY) {
+  damping: 5.0,
+  onUpdate: ({ smooth, exact, isIdle }) => {
     // If user starts scrolling manually, exit waypoint lock and return to scroll journey
     if (waypointMode) {
       waypointMode = false;
@@ -125,11 +133,11 @@ const conductor = createScrollConductor({
 
     // Update bottom progress bar
     if (progressFill) {
-      progressFill.style.width = `${(progress * 100).toFixed(1)}%`;
+      progressFill.style.width = `${(smooth * 100).toFixed(1)}%`;
     }
 
     // Sample camera choreography track
-    const sample = cameraTrack.getSample(progress);
+    const sample = cameraTrack.getSample(smooth);
 
     if (!controls.enabled) {
       // Smoothly interpolate current camera position and target
@@ -137,7 +145,6 @@ const conductor = createScrollConductor({
       currentCamTarget.lerp(sample.target, 0.12);
 
       // Check if user is idle for cinematic auto-orbit
-      const isIdle = conductor.isIdle();
       const targetIdleWeight = isIdle ? 1.0 : 0.0;
       idleWeight += (targetIdleWeight - idleWeight) * 0.04;
 
@@ -190,6 +197,14 @@ function enableFreeOrbit() {
   conductor.setManualOverride(true);
   controls.target.copy(currentCamTarget);
   document.body.classList.add('mode-free-orbit');
+  if (cameraControlsHud) {
+    cameraControlsHud.classList.remove('hidden');
+  }
+  if (cameraOrbitBtn) {
+    cameraOrbitBtn.classList.add('active');
+    const textEl = cameraOrbitBtn.querySelector('.camera-btn-text');
+    if (textEl) textEl.textContent = 'Guided Scroll';
+  }
   if (menuOrbitBtn) {
     menuOrbitBtn.textContent = 'Guided Scroll';
     menuOrbitBtn.classList.add('active');
@@ -200,10 +215,24 @@ function disableFreeOrbit() {
   controls.enabled = false;
   conductor.setManualOverride(false);
   document.body.classList.remove('mode-free-orbit');
+  if (cameraControlsHud) {
+    cameraControlsHud.classList.add('hidden');
+  }
+  if (cameraOrbitBtn) {
+    cameraOrbitBtn.classList.remove('active');
+    const textEl = cameraOrbitBtn.querySelector('.camera-btn-text');
+    if (textEl) textEl.textContent = 'Free Orbit';
+  }
   if (menuOrbitBtn) {
     menuOrbitBtn.textContent = 'Free Orbit';
     menuOrbitBtn.classList.remove('active');
   }
+}
+
+if (cameraOrbitBtn) {
+  cameraOrbitBtn.addEventListener('click', () => {
+    toggleFreeOrbit();
+  });
 }
 
 function toggleFreeOrbit() {
@@ -215,6 +244,45 @@ function toggleFreeOrbit() {
     showToast('🌐 Free Orbit Active • Drag to inspect in 360°');
   }
 }
+
+// Camera HUD Controls
+function zoomCamera(factor) {
+  if (!controls.enabled) enableFreeOrbit();
+  conductor.resetIdle();
+  const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+  offset.multiplyScalar(factor);
+  const dist = offset.length();
+  if (dist >= controls.minDistance && dist <= controls.maxDistance) {
+    camera.position.addVectors(controls.target, offset);
+    controls.update();
+  }
+}
+
+function rotateCamera(angle) {
+  if (!controls.enabled) enableFreeOrbit();
+  conductor.resetIdle();
+  const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+  offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+  camera.position.addVectors(controls.target, offset);
+  controls.update();
+}
+
+function resetCameraView() {
+  if (!controls.enabled) enableFreeOrbit();
+  conductor.resetIdle();
+  controls.target.set(0, 5.8, 0);
+  camera.position.set(18.5, 14.8, 23.5);
+  camera.fov = 42;
+  camera.updateProjectionMatrix();
+  controls.update();
+  showToast('⟲ Camera View Reset');
+}
+
+if (camResetBtn) camResetBtn.addEventListener('click', resetCameraView);
+if (camZoomInBtn) camZoomInBtn.addEventListener('click', () => zoomCamera(0.82));
+if (camZoomOutBtn) camZoomOutBtn.addEventListener('click', () => zoomCamera(1.22));
+if (camRotateLeftBtn) camRotateLeftBtn.addEventListener('click', () => rotateCamera(Math.PI / 10));
+if (camRotateRightBtn) camRotateRightBtn.addEventListener('click', () => rotateCamera(-Math.PI / 10));
 
 // 4. Dropdown Menu Trigger & Drawer Controls
 let menuOpen = false;
@@ -374,6 +442,7 @@ window.addEventListener('click', (event) => {
   if (
     event.target.closest('.nav-menu-wrapper') ||
     event.target.closest('.controls-dock') ||
+    event.target.closest('.camera-controls-hud') ||
     event.target.closest('.modal-card')
   ) {
     return;
