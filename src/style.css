@@ -74,12 +74,13 @@ body.theme-day .sky-backdrop {
   height: 100%;
   z-index: 1;
   display: block;
-  touch-action: pan-y; /* Enables smooth native vertical swipe scrolling on mobile */
+  pointer-events: none; /* In guided scroll mode, touch events pass to scroll-container */
   -webkit-tap-highlight-color: transparent;
 }
 
 body.mode-free-orbit #webgl {
-  touch-action: none; /* Allows 360-degree touch rotation in free orbit mode */
+  pointer-events: auto; /* Enables 360-degree touch rotation in Free Orbit mode */
+  touch-action: none;
 }
 
 /* Site Header */
@@ -341,16 +342,25 @@ body.mode-free-orbit .narrative-hud:hover {
 /* Native Scroll Container & Track */
 .scroll-container {
   position: relative;
-  z-index: 10;
-  pointer-events: none;
+  z-index: 5;
+  width: 100%;
+  pointer-events: auto; /* Captures touch and wheel events for native scroll on mobile & desktop */
+  touch-action: pan-y;
 }
 
 .story-section {
-  min-height: 135vh;
+  min-height: 125vh;
+  width: 100%;
   display: flex;
   align-items: center;
   padding: 0 4rem;
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+body.mode-free-orbit .scroll-container,
+body.mode-free-orbit .story-section {
+  pointer-events: none; /* In Free Orbit mode, touch events pass to canvas */
 }
 
 /* Stagger section cards left and right to avoid blocking the tower */

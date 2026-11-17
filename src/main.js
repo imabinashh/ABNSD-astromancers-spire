@@ -44,6 +44,14 @@ const currentCamPos = new THREE.Vector3().copy(camera.position);
 const currentCamTarget = new THREE.Vector3(0, 5.8, 0);
 let targetFov = 42;
 
+// Cinematic Idle Auto-Orbit State
+let idleWeight = 0;
+let idleAngle = 0.9;
+const towerCenterTarget = new THREE.Vector3(0, 5.8, 0);
+const tempIdlePos = new THREE.Vector3();
+const blendedCamPos = new THREE.Vector3();
+const blendedCamTarget = new THREE.Vector3();
+
 // Adaptive FOV for mobile portrait screens (prevents horizontal cropping)
 function getAdaptiveFOV(baseFov, aspect) {
   if (aspect >= 1.0) return baseFov;
@@ -130,29 +138,55 @@ const conductor = createScrollConductor({
     name: k.label,
     progress: k.progress
   })),
-  onUpdate({ smooth, exact, chapterIndex }) {
+  onUpdate({ smooth, exact, chapterIndex, isIdle, dt }) {
     // Update progress bar
     if (progressFill) {
       progressFill.style.width = `${smooth * 100}%`;
     }
 
-    // If Free Orbit mode is NOT enabled, drive camera via conductor
+    // If Free Orbit mode is NOT enabled, drive camera via conductor or idle orbit
     if (!controls.enabled) {
       const sample = cameraTrack.getSample(smooth);
 
-      // Smooth lerp camera position and target
+      // Smooth lerp conductor camera position and target
       currentCamPos.lerp(sample.position, 0.08);
       currentCamTarget.lerp(sample.target, 0.08);
 
-      // Add subtle organic mouse parallax
+      // If idle, ramp up idleWeight; if active, ramp down quickly
+      const step = dt || 0.016;
+      if (isIdle) {
+        idleWeight = Math.min(1.0, idleWeight + step * 0.75);
+        idleAngle += step * 0.16; // gentle cinematic orbit rotation
+      } else {
+        idleWeight = Math.max(0.0, idleWeight - step * 2.5);
+        idleAngle = Math.atan2(currentCamPos.x, currentCamPos.z);
+      }
+
+      // Calculate 360-degree cinematic orbit position around tower
+      const orbitRadius = 28.5;
+      const idleY = 14.8 + Math.sin(idleAngle * 0.5) * 1.8;
+      tempIdlePos.set(
+        Math.sin(idleAngle) * orbitRadius,
+        idleY,
+        Math.cos(idleAngle) * orbitRadius
+      );
+
+      // Blend between conductor path and cinematic idle orbit
+      blendedCamPos.lerpVectors(currentCamPos, tempIdlePos, idleWeight);
+      blendedCamTarget.lerpVectors(currentCamTarget, towerCenterTarget, idleWeight);
+
+      // Add subtle organic mouse parallax (only when active)
       mouse.x += (mouse.targetX - mouse.x) * 0.05;
       mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
-      camera.position.copy(currentCamPos);
-      camera.position.x += mouse.x * 0.35;
-      camera.position.y += -mouse.y * 0.25;
+      camera.position.copy(blendedCamPos);
+      if (idleWeight < 0.95) {
+        const pFactor = 1 - idleWeight;
+        camera.position.x += mouse.x * 0.35 * pFactor;
+        camera.position.y += -mouse.y * 0.25 * pFactor;
+      }
 
-      camera.lookAt(currentCamTarget);
+      camera.lookAt(blendedCamTarget);
 
       // Camera FOV lerp with mobile portrait auto-adaptation
       targetFov = getAdaptiveFOV(sample.fov, camera.aspect);
@@ -259,8 +293,11 @@ hotspotClose.addEventListener('click', () => {
   hotspotPopup.classList.add('hidden');
 });
 
-// Click interaction on 3D elements
-canvas.addEventListener('click', (event) => {
+// Click / Tap interaction on 3D elements (works on both mobile touch and desktop)
+window.addEventListener('click', (event) => {
+  if (event.target.closest('.site-header') || event.target.closest('.hotspot-popup')) return;
+  conductor.resetIdle();
+
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
