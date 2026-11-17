@@ -126,14 +126,14 @@ function flyToWaypoint(camPos, targetPos, fov, toastText) {
 const conductor = createScrollConductor({
   damping: 5.0,
   onUpdate: ({ smooth, exact, isIdle }) => {
-    // If user starts scrolling manually, exit waypoint lock and return to scroll journey
-    if (waypointMode) {
-      waypointMode = false;
-    }
-
     // Update bottom progress bar
     if (progressFill) {
       progressFill.style.width = `${(smooth * 100).toFixed(1)}%`;
+    }
+
+    // When viewing a landmark waypoint, do not let scroll track override camera
+    if (waypointMode) {
+      return;
     }
 
     // Sample camera choreography track
@@ -190,6 +190,21 @@ const conductor = createScrollConductor({
 });
 
 conductor.start();
+
+// Exit landmark waypoint view when viewer physically scrolls or swipes
+window.addEventListener('wheel', (e) => {
+  if (waypointMode && Math.abs(e.deltaY) > 8) {
+    waypointMode = false;
+    showToast('🔭 Guided Scroll Resumed');
+  }
+}, { passive: true });
+
+window.addEventListener('touchmove', () => {
+  if (waypointMode) {
+    waypointMode = false;
+    showToast('🔭 Guided Scroll Resumed');
+  }
+}, { passive: true });
 
 // 3. Free Orbit Mode Toggle
 function enableFreeOrbit() {
@@ -332,22 +347,26 @@ menuPillBtns.forEach(btn => {
     closeMenu();
 
     if (target === 'sanctuary') {
-      waypointMode = false;
-      conductor.setProgress(0.0);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      showToast('✦ The Sanctuary • The Astromancer\'s Spire');
+      flyToWaypoint(
+        new THREE.Vector3(18.5, 14.8, 23.5),
+        new THREE.Vector3(0, 5.8, 0),
+        42,
+        '✦ The Sanctuary • Full Archipelago View'
+      );
+      conductor.setProgress(0.0, false);
+      window.scrollTo({ top: 0, behavior: 'instant' });
       audio.playChime();
     } else if (target === 'pumpkin') {
       flyToWaypoint(
-        new THREE.Vector3(-4.8, 3.8, 14.5),
+        new THREE.Vector3(-6.2, 3.8, 14.2),
         new THREE.Vector3(-11.5, 0.8, 5.0),
-        38,
+        40,
         '🎃 Pumpkin Grove • The Alchemist\'s Garden'
       );
       audio.playBubble();
     } else if (target === 'cottage') {
       flyToWaypoint(
-        new THREE.Vector3(17.5, 4.2, 5.5),
+        new THREE.Vector3(17.8, 4.2, 5.2),
         new THREE.Vector3(11.5, 1.4, -4.5),
         38,
         '🌙 Cottage Outpost • The Apprentice\'s Watch'
@@ -489,15 +508,25 @@ function animate(currentTime) {
     controls.update();
   } else if (waypointMode) {
     // Smooth camera flight toward landmark waypoint
-    currentCamPos.lerp(waypointCamPos, 0.08);
-    currentCamTarget.lerp(waypointTarget, 0.08);
+    currentCamPos.lerp(waypointCamPos, 0.07);
+    currentCamTarget.lerp(waypointTarget, 0.07);
+
+    // Subtle organic parallax
+    mouse.x += (mouse.targetX - mouse.x) * 0.05;
+    mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
     camera.position.copy(currentCamPos);
+    camera.position.x += mouse.x * 0.22;
+    camera.position.y += -mouse.y * 0.16;
+
     camera.lookAt(currentCamTarget);
 
     targetFov = getAdaptiveFOV(waypointFov, camera.aspect);
-    camera.fov += (targetFov - camera.fov) * 0.08;
+    camera.fov += (targetFov - camera.fov) * 0.07;
     camera.updateProjectionMatrix();
+
+    // Keep OrbitControls pivot aligned with landmark
+    controls.target.copy(currentCamTarget);
   }
 
   // Update floating island breathing bob
