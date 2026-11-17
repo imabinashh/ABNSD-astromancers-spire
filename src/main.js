@@ -34,6 +34,10 @@ const celestial = createCelestial(scene);
 const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
+// Initialize lighting & celestial to default Sunset atmosphere
+lighting.applyPreset('sunset');
+celestial.setTheme('sunset');
+
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
 const currentCamTarget = new THREE.Vector3(0, 5.8, 0);
