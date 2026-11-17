@@ -35,7 +35,7 @@ export function createScene(canvas) {
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
   controls.minDistance = 3.5;
-  controls.maxDistance = 45;
+  controls.maxDistance = 40;
   controls.maxPolarAngle = Math.PI * 0.95;
   controls.target.set(0, 5.2, 0);
   controls.enabled = false; // default to scroll conductor mode

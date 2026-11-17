@@ -8,11 +8,11 @@ export function createLighting(scene) {
   sunLight.shadow.mapSize.width = 2048;
   sunLight.shadow.mapSize.height = 2048;
   sunLight.shadow.camera.near = 1;
-  sunLight.shadow.camera.far = 60;
-  sunLight.shadow.camera.left = -14;
-  sunLight.shadow.camera.right = 14;
-  sunLight.shadow.camera.top = 20;
-  sunLight.shadow.camera.bottom = -10;
+  sunLight.shadow.camera.far = 110;
+  sunLight.shadow.camera.left = -16;
+  sunLight.shadow.camera.right = 16;
+  sunLight.shadow.camera.top = 24;
+  sunLight.shadow.camera.bottom = -12;
   sunLight.shadow.bias = -0.0005;
   sunLight.shadow.normalBias = 0.02;
   scene.add(sunLight);
@@ -48,8 +48,8 @@ export function createLighting(scene) {
   const presets = {
     sunset: {
       sunColor: 0xff9944,
-      sunIntensity: 2.2,
-      sunPosition: [-17.0, 14.5, -13.0],
+      sunIntensity: 2.3,
+      sunPosition: [-36.0, 16.5, -30.0],
       ambientColor: 0xd2b5d8,
       ambientIntensity: 1.05,
       hemiSky: 0xffd9c7,
@@ -64,7 +64,7 @@ export function createLighting(scene) {
     night: {
       sunColor: 0xb5d4ff,
       sunIntensity: 2.4,
-      sunPosition: [-15.0, 22.0, -13.0],
+      sunPosition: [-28.0, 26.0, -25.0],
       ambientColor: 0x364875,
       ambientIntensity: 0.95,
       hemiSky: 0x485f94,
@@ -79,7 +79,7 @@ export function createLighting(scene) {
     day: {
       sunColor: 0xfffaea,
       sunIntensity: 2.4,
-      sunPosition: [-13.0, 20.0, -14.0],
+      sunPosition: [-26.0, 28.0, -24.0],
       ambientColor: 0xdbe8ff,
       ambientIntensity: 1.15,
       hemiSky: 0xd8eeff,
