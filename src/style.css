@@ -1,12 +1,12 @@
 /* ========================================================
-   THE ASTROMANCER'S SPIRE — MODERN LOW-POLY SCROLLWORLD CSS
+   THE ASTROMANCER'S SPIRE — MODERN SOLID TACTILE UI CSS
    ======================================================== */
 
 :root {
   --font-serif: 'Cinzel', serif;
-  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Color themes */
+  /* Theme Background Gradients */
   --sunset-top: #7f8bb4;
   --sunset-mid: #a595be;
   --sunset-bottom: #e6c6b3;
@@ -19,13 +19,16 @@
   --day-mid: #aed1f3;
   --day-bottom: #e4eef9;
 
-  --card-bg: rgba(26, 29, 44, 0.55);
-  --card-border: rgba(255, 255, 255, 0.16);
-  --text-main: #f5f2eb;
-  --text-muted: #c7c4be;
-  --accent-gold: #ffc857;
-  --accent-potion: #42f56f;
-  --accent-glow: rgba(255, 200, 87, 0.25);
+  /* Solid Tactile Colors (Zero Blur, High Contrast) */
+  --pill-bg: #ffffff;
+  --pill-text: #0d1424;
+  --pill-active-bg: #2563eb;
+  --pill-active-text: #ffffff;
+  --pill-shadow: 0 5px 16px rgba(0, 0, 0, 0.32);
+  --pill-shadow-hover: 0 8px 22px rgba(0, 0, 0, 0.45);
+  --pill-blue-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+
+  --accent-gold: #f59e0b;
 }
 
 * {
@@ -38,8 +41,8 @@ html, body {
   width: 100%;
   min-height: 100%;
   font-family: var(--font-sans);
-  color: var(--text-main);
-  background-color: #1a1c27;
+  color: #ffffff;
+  background-color: #101424;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -74,432 +77,520 @@ body.theme-day .sky-backdrop {
   height: 100%;
   z-index: 1;
   display: block;
-  pointer-events: none; /* In guided scroll mode, touch events pass to scroll-container */
+  pointer-events: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 body.mode-free-orbit #webgl {
-  pointer-events: auto; /* Enables 360-degree touch rotation in Free Orbit mode */
+  pointer-events: auto;
   touch-action: none;
 }
 
-/* Site Header */
-.site-header {
+/* Helper Class */
+.hidden {
+  display: none !important;
+}
+
+/* ========================================================
+   TOP-LEFT: FLOATING CIRCLE BUTTON & DROPDOWN MENU
+   ======================================================== */
+.nav-menu-wrapper {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  padding: 1.25rem 2rem;
-  z-index: 30;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 60;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: linear-gradient(180deg, rgba(16, 18, 28, 0.6) 0%, rgba(16, 18, 28, 0) 100%);
-  pointer-events: none;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.site-header * {
-  pointer-events: auto;
-}
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.brand-glyph {
-  font-size: 1.4rem;
-  color: var(--accent-gold);
-  filter: drop-shadow(0 0 8px rgba(255, 200, 87, 0.6));
-  animation: pulseGlyph 3s ease-in-out infinite alternate;
-}
-
-@keyframes pulseGlyph {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  100% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 14px rgba(255, 200, 87, 0.9)); }
-}
-
-.brand-title {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #fff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.brand-subtitle {
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-/* Controls */
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(18, 21, 33, 0.45);
-  border: 1px solid var(--card-border);
-  border-radius: 9999px;
-  padding: 0.25rem 0.6rem;
-  backdrop-filter: blur(8px);
-}
-
-.control-label {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--accent-gold);
-  margin-right: 0.2rem;
-  padding-left: 0.4rem;
-}
-
-.theme-buttons {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.theme-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-muted);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.35rem 0.65rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.theme-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.theme-btn.active {
-  color: #12141e;
-  background: var(--accent-gold);
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(255, 200, 87, 0.4);
-}
-
-.toggle-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-main);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  transition: all 0.2s ease;
-}
-
-.toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.toggle-btn.active {
-  background: #39a3ff;
-  color: #fff;
-  box-shadow: 0 0 12px rgba(57, 163, 255, 0.5);
-}
-
-.audio-btn {
-  background: rgba(18, 21, 33, 0.45);
-  border: 1px solid var(--card-border);
-  color: var(--text-main);
-  width: 2.2rem;
-  height: 2.2rem;
+/* Circular Hamburger Button */
+.menu-circle-btn {
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
+  border: none;
+  outline: none;
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  box-shadow: var(--pill-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+  user-select: none;
+}
+
+.menu-circle-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--pill-shadow-hover);
+}
+
+.menu-circle-btn:active {
+  transform: scale(0.96);
+}
+
+.menu-circle-btn.open {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+/* 3-Bar Hamburger SVG Icon */
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 20px;
+  height: 16px;
+}
+
+.hamburger-icon .bar {
+  display: block;
+  width: 18px;
+  height: 2.4px;
+  background-color: currentColor;
+  border-radius: 9999px;
+  transition: all 0.25s ease;
+}
+
+.close-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dropdown Menu Drawer (Tactile Pills Stack) */
+.nav-menu-drawer {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  animation: slideDownMenu 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideDownMenu {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menu-pills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* Solid Tactile Menu Pills */
+.menu-pill-btn {
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.72rem 1.6rem;
+  border-radius: 9999px;
+  box-shadow: var(--pill-shadow);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+}
+
+.menu-pill-btn:hover {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: var(--pill-blue-shadow);
+}
+
+.menu-pill-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.menu-pill-btn.active {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
+  box-shadow: var(--pill-blue-shadow);
+}
+
+/* Menu Footer Signature */
+.menu-footer {
+  margin-top: 0.75rem;
+  padding-left: 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ========================================================
+   TOP-RIGHT: CONTROLS DOCK (ATMOSPHERE & AUDIO)
+   ======================================================== */
+.controls-dock {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+/* Solid Segmented Atmosphere Pill Group */
+.atmosphere-pill-group {
+  display: flex;
+  align-items: center;
+  background: var(--pill-bg);
+  border-radius: 9999px;
+  padding: 3.5px;
+  box-shadow: var(--pill-shadow);
+  gap: 2px;
+}
+
+.theme-pill-btn {
+  background: transparent;
+  color: var(--pill-text);
+  border: none;
+  outline: none;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.88rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+
+.theme-pill-btn .pill-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.theme-pill-btn:hover {
+  background: #f1f5f9;
+  color: #000;
+  transform: translateY(-1px);
+}
+
+.theme-pill-btn.active {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
+  box-shadow: var(--pill-blue-shadow);
+}
+
+.theme-pill-btn.active .pill-icon {
+  transform: scale(1.1);
+}
+
+/* Audio Toggle Circle Button */
+.audio-circle-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  outline: none;
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  box-shadow: var(--pill-shadow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.audio-circle-btn:hover {
+  transform: scale(1.08);
+  box-shadow: var(--pill-shadow-hover);
+}
+
+.audio-circle-btn:active {
+  transform: scale(0.96);
+}
+
+.audio-circle-btn.active {
+  background: var(--pill-active-bg);
+  color: var(--pill-active-text);
+  box-shadow: var(--pill-blue-shadow);
+}
+
+/* ========================================================
+   LANDMARK TOAST NOTIFICATION
+   ======================================================== */
+.landmark-toast {
+  position: fixed;
+  bottom: 2.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: #ffffff;
+  color: #0d1424;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.65rem 1.4rem;
+  border-radius: 9999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: toastFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastFadeIn {
+  0% { opacity: 0; transform: translate(-50%, 12px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ========================================================
+   ABOUT MODAL OVERLAY
+   ======================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(6, 10, 22, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 0.25s ease forwards;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.modal-card {
+  position: relative;
+  background: #ffffff;
+  color: #0d1424;
+  width: 100%;
+  max-width: 540px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  padding: 2.2rem 2.4rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+  100% { opacity: 1; transform: scale(1.0) translateY(0); }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #0f172a;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
 
-.audio-btn:hover {
-  border-color: var(--accent-gold);
-  transform: scale(1.05);
+.modal-close-btn:hover {
+  background: #e2e8f0;
+  transform: scale(1.1);
 }
 
-/* Fixed Narrative HUD Card */
-.narrative-hud {
-  position: fixed;
-  bottom: 2.5rem;
-  left: 2.5rem;
-  z-index: 20;
-  max-width: 420px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 1.5rem 1.8rem;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-  pointer-events: auto;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-body.mode-free-orbit .narrative-hud {
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-body.mode-free-orbit .narrative-hud:hover {
-  opacity: 0.9;
-  pointer-events: auto;
-}
-
-.hud-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--accent-gold);
-  margin-bottom: 0.5rem;
-}
-
-.hud-divider {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.hud-title {
-  font-family: var(--font-serif);
-  font-size: 1.55rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #fff;
-  line-height: 1.25;
-  margin-bottom: 0.65rem;
-}
-
-.hud-body {
-  font-size: 0.9rem;
-  font-weight: 300;
-  line-height: 1.6;
-  color: var(--text-muted);
-  margin-bottom: 1.1rem;
-}
-
-.hud-tags {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.hud-tag {
+.modal-badge {
+  display: inline-block;
   font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 0.25rem 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 0.3rem 0.65rem;
   border-radius: 9999px;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
 }
 
-/* Progress Bar */
+.modal-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.modal-subtitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 0.3rem;
+  margin-bottom: 1.4rem;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.modal-section h3 {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #1e293b;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+
+.modal-section p {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.modal-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.modal-list li {
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #334155;
+  padding-left: 0.8rem;
+  position: relative;
+}
+
+.modal-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.modal-footer {
+  margin-top: 1.6rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+}
+
+.modal-footer strong {
+  color: #0f172a;
+}
+
+/* ========================================================
+   BOTTOM PROGRESS BAR
+   ======================================================== */
 .progress-bar-container {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 30;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  z-index: 40;
+  pointer-events: none;
 }
 
 .progress-bar-fill {
-  height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #39a3ff, var(--accent-gold), var(--accent-potion));
-  transition: width 0.1s linear;
+  height: 100%;
+  background: #2563eb;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.8);
+  transition: width 0.08s ease-out;
 }
 
-/* Native Scroll Container & Track */
+/* ========================================================
+   NATIVE DOCUMENT SCROLL CONTAINER
+   ======================================================== */
 .scroll-container {
   position: relative;
-  z-index: 5;
   width: 100%;
-  pointer-events: auto; /* Captures touch and wheel events for native scroll on mobile & desktop */
+  z-index: 2;
+  pointer-events: auto;
   touch-action: pan-y;
 }
 
 .story-section {
   min-height: 125vh;
   width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 0 4rem;
-  pointer-events: auto;
-  touch-action: pan-y;
 }
 
-body.mode-free-orbit .scroll-container,
-body.mode-free-orbit .story-section {
-  pointer-events: none; /* In Free Orbit mode, touch events pass to canvas */
-}
-
-/* Stagger section cards left and right to avoid blocking the tower */
-.story-section:nth-child(even) {
-  justify-content: flex-end;
-}
-
-.story-section:nth-child(odd) {
-  justify-content: flex-start;
-}
-
-.section-card {
-  max-width: 400px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 2rem 2.2rem;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-  opacity: 0.85;
-  transform: translateY(20px);
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.section-card:hover {
-  opacity: 1;
-  transform: translateY(0);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.card-step {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--accent-gold);
-  margin-bottom: 0.5rem;
-}
-
-.section-card h2 {
-  font-family: var(--font-serif);
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 0.75rem;
-  line-height: 1.3;
-}
-
-.section-card p {
-  font-size: 0.88rem;
-  font-weight: 300;
-  line-height: 1.6;
-  color: var(--text-muted);
-  margin-bottom: 1.0rem;
-}
-
-.card-prompt {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--accent-potion);
-  letter-spacing: 0.04em;
-}
-
-.card-action-wrap {
-  margin-top: 1rem;
-}
-
-.action-orbit-btn {
-  background: linear-gradient(135deg, #39a3ff 0%, #2062d8 100%);
-  color: #fff;
-  border: none;
-  outline: none;
-  padding: 0.7rem 1.4rem;
-  border-radius: 9999px;
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: 0 4px 16px rgba(32, 98, 216, 0.4);
-  transition: all 0.25s ease;
-}
-
-.action-orbit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(32, 98, 216, 0.6);
-}
-
-/* Responsive adjustments for Mobile & Tablets */
-@media (max-width: 900px) {
-  .site-header {
-    padding: 0.85rem 1.25rem;
-    flex-wrap: wrap;
-    gap: 0.6rem;
+/* ========================================================
+   MOBILE RESPONSIVENESS
+   ======================================================== */
+@media (max-width: 640px) {
+  .nav-menu-wrapper {
+    top: 1.0rem;
+    left: 1.0rem;
   }
-  .story-section {
-    padding: 0 1.25rem;
-    min-height: 100vh;
-  }
-}
 
-@media (max-width: 600px) {
-  .site-header {
-    padding: 0.65rem 0.85rem;
-    gap: 0.45rem;
+  .controls-dock {
+    top: 1.0rem;
+    right: 1.0rem;
+    gap: 0.4rem;
   }
-  .brand-title {
+
+  .theme-pill-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.78rem;
+  }
+
+  .theme-pill-btn span {
+    display: none; /* Show only icons on small mobile screens to keep dock compact */
+  }
+
+  .menu-pill-btn {
     font-size: 0.88rem;
-    letter-spacing: 0.12em;
+    padding: 0.65rem 1.3rem;
   }
-  .brand-subtitle {
-    display: none;
+
+  .modal-card {
+    padding: 1.6rem 1.4rem;
+    border-radius: 16px;
   }
-  .control-label {
-    display: none;
+
+  .modal-title {
+    font-size: 1.3rem;
   }
-  .control-group {
-    padding: 0.18rem 0.35rem;
-    gap: 0.2rem;
-  }
-  .theme-btn {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.5rem;
-  }
-  .toggle-btn {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.55rem;
-  }
-  .audio-btn {
-    width: 1.95rem;
-    height: 1.95rem;
+
+  .landmark-toast {
     font-size: 0.8rem;
-  }
-  .header-controls {
-    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    bottom: 1.5rem;
   }
 }

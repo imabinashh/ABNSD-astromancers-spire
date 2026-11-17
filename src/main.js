@@ -12,16 +12,26 @@ import { createSatelliteIslands } from './world/satelliteIslands.js';
 
 // DOM Elements
 const canvas = document.getElementById('webgl');
-const hudChapterNum = document.getElementById('hud-chapter-num');
-const hudPhase = document.getElementById('hud-phase');
-const hudTitle = document.getElementById('hud-title');
-const hudBody = document.getElementById('hud-body');
-const tagFocus = document.getElementById('tag-focus');
-const tagAltitude = document.getElementById('tag-altitude');
 const progressFill = document.getElementById('progress-fill');
-const toggleOrbitBtn = document.getElementById('toggle-orbit-btn');
+
+// Navigation & Menu DOM
+const menuToggleBtn = document.getElementById('menu-toggle-btn');
+const hamburgerIcon = menuToggleBtn ? menuToggleBtn.querySelector('.hamburger-icon') : null;
+const closeIcon = menuToggleBtn ? menuToggleBtn.querySelector('.close-icon') : null;
+const navMenuDrawer = document.getElementById('nav-menu-drawer');
+const menuPillBtns = document.querySelectorAll('.menu-pill-btn');
+const menuOrbitBtn = document.getElementById('menu-orbit-btn');
+
+// Top-Right Controls DOM
+const themeBtns = document.querySelectorAll('.theme-pill-btn');
 const audioToggleBtn = document.getElementById('audio-toggle-btn');
-const exploreFreelyBtn = document.getElementById('explore-freely-btn');
+const soundIconOn = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-on') : null;
+const soundIconOff = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-off') : null;
+
+// Modal & Toast DOM
+const aboutModal = document.getElementById('about-modal');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+const landmarkToast = document.getElementById('landmark-toast');
 
 // 1. Initialize 3D World Core
 const { scene, camera, renderer, controls, update: updateScene } = createScene(canvas);
@@ -36,7 +46,7 @@ const satelliteIslands = createSatelliteIslands(scene);
 const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
-// Initialize lighting & celestial to default Sunset atmosphere
+// Initialize lighting, celestial & archipelago to default Sunset atmosphere
 lighting.applyPreset('sunset');
 celestial.setTheme('sunset');
 satelliteIslands.setTheme('sunset');
@@ -53,6 +63,13 @@ const towerCenterTarget = new THREE.Vector3(0, 5.8, 0);
 const tempIdlePos = new THREE.Vector3();
 const blendedCamPos = new THREE.Vector3();
 const blendedCamTarget = new THREE.Vector3();
+
+// Landmark Waypoint Camera State
+let waypointMode = false;
+const waypointCamPos = new THREE.Vector3();
+const waypointTarget = new THREE.Vector3();
+let waypointFov = 42;
+let toastTimeout = null;
 
 // Adaptive FOV for mobile portrait screens (prevents horizontal cropping)
 function getAdaptiveFOV(baseFov, aspect) {
@@ -72,108 +89,72 @@ if (window.matchMedia('(pointer: fine)').matches) {
   });
 }
 
-// Chapters Metadata corresponding to the 7 keyframe sections
-const chapterMetadata = [
-  {
-    num: 'CHAPTER 01',
-    phase: 'THE SANCTUARY',
-    title: 'The Floating Spire',
-    body: 'Suspended in twilight, the ancient low-poly sanctuary hovers peacefully. The entire tower, grassy plateau, and rocky crags are visible in full panoramic perspective.',
-    focus: '🔭 Full View',
-    altitude: '4,200m'
-  },
-  {
-    num: 'CHAPTER 02',
-    phase: 'ASCENDING',
-    title: 'Ascending to the Spire',
-    body: 'Moving upwards toward the sky, soaring past the stone walls and timber frames toward the celestial dome above.',
-    focus: '☁️ Ascent',
-    altitude: '4,450m'
-  },
-  {
-    num: 'CHAPTER 03',
-    phase: 'THE OBSERVATORY',
-    title: 'The Crooked Wizard Spire',
-    body: 'At the summit: the signature bent wizard-hat roof, the stone chimney releasing puffs of warm smoke, the gabled dormer, and a brass telescope pointed toward uncharted stars.',
-    focus: '✨ Spire & Stargazer',
-    altitude: '4,700m'
-  },
-  {
-    num: 'CHAPTER 04',
-    phase: 'DESCENT • TIMBER',
-    title: 'Tudor Timber Chamber',
-    body: 'Descending downward: the half-timber upper study framed with dark oak cross-beams. Cozy yellow light radiates from the mullioned glass panes into the cool mountain air.',
-    focus: '🕯️ Timber Study',
-    altitude: '4,400m'
-  },
-  {
-    num: 'CHAPTER 05',
-    phase: 'DESCENT • STONE',
-    title: 'Ancient Stone Masonry',
-    body: 'Gliding further down the tower body: weathered ashlar stone cylinders accented with individual protruding masonry blocks and an illuminated arched casement.',
-    focus: '🧱 Masonry Body',
-    altitude: '4,150m'
-  },
-  {
-    num: 'CHAPTER 06',
-    phase: 'DESCENT • GROUNDS',
-    title: 'Sanctum Grounds & Cauldron',
-    body: 'Reaching the island surface: the heavy arched stone doorway with iron ring, cobblestone walkway, wild red toadstools, and an alchemist cauldron boiling with glowing green elixir.',
-    focus: '🧪 Glowing Cauldron',
-    altitude: '3,900m'
-  },
-  {
-    num: 'CHAPTER 07',
-    phase: 'DESCENT • CRAG',
-    title: 'The Underworld Crag',
-    body: 'Sweeping beneath the grassy rim: the jagged, faceted rocky cone anchoring the sanctuary in the endless skies, with crystalline motes swirling below.',
-    focus: '🪨 Floating Roots',
-    altitude: '3,700m'
+// Toast Helper
+function showToast(text) {
+  if (!landmarkToast) return;
+  landmarkToast.textContent = text;
+  landmarkToast.classList.remove('hidden');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    landmarkToast.classList.add('hidden');
+  }, 3200);
+}
+
+// Fly smoothly to landmark
+function flyToWaypoint(camPos, targetPos, fov, toastText) {
+  if (controls.enabled) {
+    disableFreeOrbit();
   }
-];
+  waypointMode = true;
+  waypointCamPos.copy(camPos);
+  waypointTarget.copy(targetPos);
+  waypointFov = fov;
+  conductor.resetIdle();
+  showToast(toastText);
+}
 
 // 2. Initialize Scroll Conductor
 const conductor = createScrollConductor({
-  damping: 4.8,
-  chapters: cameraTrack.keyframes.map((k, i) => ({
-    id: `chapter-${i}`,
-    name: k.label,
-    progress: k.progress
-  })),
-  onUpdate({ smooth, exact, chapterIndex, isIdle, dt }) {
-    // Update progress bar
-    if (progressFill) {
-      progressFill.style.width = `${smooth * 100}%`;
+  sectionCount: 8,
+  dampingFactor: 0.08,
+  onProgressUpdate(progress, rawScrollY) {
+    // If user starts scrolling manually, exit waypoint lock and return to scroll journey
+    if (waypointMode) {
+      waypointMode = false;
     }
 
-    // If Free Orbit mode is NOT enabled, drive camera via conductor or idle orbit
+    // Update bottom progress bar
+    if (progressFill) {
+      progressFill.style.width = `${(progress * 100).toFixed(1)}%`;
+    }
+
+    // Sample camera choreography track
+    const sample = cameraTrack.getSample(progress);
+
     if (!controls.enabled) {
-      const sample = cameraTrack.getSample(smooth);
+      // Smoothly interpolate current camera position and target
+      currentCamPos.lerp(sample.position, 0.12);
+      currentCamTarget.lerp(sample.target, 0.12);
 
-      // Smooth lerp conductor camera position and target
-      currentCamPos.lerp(sample.position, 0.08);
-      currentCamTarget.lerp(sample.target, 0.08);
+      // Check if user is idle for cinematic auto-orbit
+      const isIdle = conductor.isIdle();
+      const targetIdleWeight = isIdle ? 1.0 : 0.0;
+      idleWeight += (targetIdleWeight - idleWeight) * 0.04;
 
-      // If idle, ramp up idleWeight; if active, ramp down quickly
-      const step = dt || 0.016;
-      if (isIdle) {
-        idleWeight = Math.min(1.0, idleWeight + step * 0.75);
-        idleAngle += step * 0.16; // gentle cinematic orbit rotation
-      } else {
-        idleWeight = Math.max(0.0, idleWeight - step * 2.5);
-        idleAngle = Math.atan2(currentCamPos.x, currentCamPos.z);
+      if (idleWeight > 0.01) {
+        // Orbit around tower center smoothly
+        idleAngle += 0.0035;
+        const currentDist = Math.hypot(currentCamPos.x, currentCamPos.z);
+        const orbitRadius = Math.max(16.0, Math.min(30.0, currentDist));
+        const orbitHeight = Math.max(8.0, currentCamPos.y);
+
+        tempIdlePos.set(
+          Math.sin(idleAngle) * orbitRadius,
+          orbitHeight,
+          Math.cos(idleAngle) * orbitRadius
+        );
       }
 
-      // Calculate 360-degree cinematic orbit position around tower
-      const orbitRadius = 28.5;
-      const idleY = 14.8 + Math.sin(idleAngle * 0.5) * 1.8;
-      tempIdlePos.set(
-        Math.sin(idleAngle) * orbitRadius,
-        idleY,
-        Math.cos(idleAngle) * orbitRadius
-      );
-
-      // Blend between conductor path and cinematic idle orbit
       blendedCamPos.lerpVectors(currentCamPos, tempIdlePos, idleWeight);
       blendedCamTarget.lerpVectors(currentCamTarget, towerCenterTarget, idleWeight);
 
@@ -197,7 +178,6 @@ const conductor = createScrollConductor({
     }
   },
   onChapterChange(index) {
-    // Play subtle audio chime on chapter transition
     audio.playChime();
   }
 });
@@ -210,34 +190,127 @@ function enableFreeOrbit() {
   conductor.setManualOverride(true);
   controls.target.copy(currentCamTarget);
   document.body.classList.add('mode-free-orbit');
-  toggleOrbitBtn.classList.add('active');
-  toggleOrbitBtn.querySelector('.btn-text').textContent = 'Guided Scroll';
+  if (menuOrbitBtn) {
+    menuOrbitBtn.textContent = 'Guided Scroll';
+    menuOrbitBtn.classList.add('active');
+  }
 }
 
 function disableFreeOrbit() {
   controls.enabled = false;
   conductor.setManualOverride(false);
   document.body.classList.remove('mode-free-orbit');
-  toggleOrbitBtn.classList.remove('active');
-  toggleOrbitBtn.querySelector('.btn-text').textContent = 'Free Orbit';
+  if (menuOrbitBtn) {
+    menuOrbitBtn.textContent = 'Free Orbit';
+    menuOrbitBtn.classList.remove('active');
+  }
 }
 
-toggleOrbitBtn.addEventListener('click', () => {
+function toggleFreeOrbit() {
   if (controls.enabled) {
     disableFreeOrbit();
+    showToast('🔭 Guided Scroll Active');
   } else {
     enableFreeOrbit();
+    showToast('🌐 Free Orbit Active • Drag to inspect in 360°');
   }
-});
+}
 
-if (exploreFreelyBtn) {
-  exploreFreelyBtn.addEventListener('click', () => {
-    enableFreeOrbit();
+// 4. Dropdown Menu Trigger & Drawer Controls
+let menuOpen = false;
+
+function openMenu() {
+  menuOpen = true;
+  navMenuDrawer.classList.remove('hidden');
+  menuToggleBtn.classList.add('open');
+  menuToggleBtn.setAttribute('aria-expanded', 'true');
+  if (hamburgerIcon) hamburgerIcon.classList.add('hidden');
+  if (closeIcon) closeIcon.classList.remove('hidden');
+}
+
+function closeMenu() {
+  menuOpen = false;
+  navMenuDrawer.classList.add('hidden');
+  menuToggleBtn.classList.remove('open');
+  menuToggleBtn.setAttribute('aria-expanded', 'false');
+  if (hamburgerIcon) hamburgerIcon.classList.remove('hidden');
+  if (closeIcon) closeIcon.classList.add('hidden');
+}
+
+if (menuToggleBtn) {
+  menuToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (menuOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
   });
 }
 
-// 4. Time of Day / Atmosphere Switcher
-const themeBtns = document.querySelectorAll('.theme-btn');
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (menuOpen && !e.target.closest('.nav-menu-wrapper')) {
+    closeMenu();
+  }
+});
+
+// Menu Pill Item Actions
+menuPillBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.getAttribute('data-target');
+    menuPillBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    closeMenu();
+
+    if (target === 'sanctuary') {
+      waypointMode = false;
+      conductor.setProgress(0.0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast('✦ The Sanctuary • The Astromancer\'s Spire');
+      audio.playChime();
+    } else if (target === 'pumpkin') {
+      flyToWaypoint(
+        new THREE.Vector3(-4.8, 3.8, 14.5),
+        new THREE.Vector3(-11.5, 0.8, 5.0),
+        38,
+        '🎃 Pumpkin Grove • The Alchemist\'s Garden'
+      );
+      audio.playBubble();
+    } else if (target === 'cottage') {
+      flyToWaypoint(
+        new THREE.Vector3(17.5, 4.2, 5.5),
+        new THREE.Vector3(11.5, 1.4, -4.5),
+        38,
+        '🌙 Cottage Outpost • The Apprentice\'s Watch'
+      );
+      audio.playChime();
+    } else if (target === 'orbit') {
+      toggleFreeOrbit();
+    } else if (target === 'about') {
+      if (aboutModal) {
+        aboutModal.classList.remove('hidden');
+      }
+    }
+  });
+});
+
+// About Modal Event Listeners
+if (modalCloseBtn) {
+  modalCloseBtn.addEventListener('click', () => {
+    aboutModal.classList.add('hidden');
+  });
+}
+
+if (aboutModal) {
+  aboutModal.addEventListener('click', (e) => {
+    if (e.target === aboutModal) {
+      aboutModal.classList.add('hidden');
+    }
+  });
+}
+
+// 5. Time of Day / Atmosphere Switcher (Top-Right Dock)
 themeBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     const theme = btn.getAttribute('data-theme');
@@ -248,7 +321,7 @@ themeBtns.forEach((btn) => {
     document.body.classList.remove('theme-sunset', 'theme-night', 'theme-day');
     document.body.classList.add(`theme-${theme}`);
 
-    // Update 3D Lighting preset
+    // Update 3D Lighting & Celestial presets
     lighting.applyPreset(theme);
     celestial.setTheme(theme);
     satelliteIslands.setTheme(theme);
@@ -257,32 +330,54 @@ themeBtns.forEach((btn) => {
     if (theme === 'night') {
       clouds.cloudMaterial.color.setHex(0x28324a);
       clouds.cloudMatWarm.color.setHex(0x354060);
+      showToast('🌙 Midnight Leylines Activated');
     } else if (theme === 'sunset') {
       clouds.cloudMaterial.color.setHex(0xfbf8f4);
       clouds.cloudMatWarm.color.setHex(0xffe8d6);
+      showToast('🌅 Golden Sunset Hour');
     } else {
       clouds.cloudMaterial.color.setHex(0xffffff);
       clouds.cloudMatWarm.color.setHex(0xf2f7ff);
+      showToast('☀️ Radiant High Daylight');
     }
 
     audio.playChime();
   });
 });
 
-// 5. Audio Toggle
-audioToggleBtn.addEventListener('click', () => {
-  const isPlaying = audio.toggle();
-  audioToggleBtn.querySelector('.audio-icon').textContent = isPlaying ? '🔊' : '🔇';
-  audioToggleBtn.classList.toggle('active', isPlaying);
-});
+// 6. Audio Toggle
+if (audioToggleBtn) {
+  audioToggleBtn.addEventListener('click', () => {
+    const isPlaying = audio.toggle();
+    if (soundIconOn && soundIconOff) {
+      if (isPlaying) {
+        soundIconOn.classList.remove('hidden');
+        soundIconOff.classList.add('hidden');
+        audioToggleBtn.classList.add('active');
+        showToast('🔊 Ambient Soundscape On');
+      } else {
+        soundIconOn.classList.add('hidden');
+        soundIconOff.classList.remove('hidden');
+        audioToggleBtn.classList.remove('active');
+        showToast('🔇 Ambient Soundscape Muted');
+      }
+    }
+  });
+}
 
-// 6. Raycasting & Interactive Hotspots
+// 7. Raycasting & Interactive Hotspots on Click/Tap
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-// Click / Tap interaction on 3D elements (pure visual/audio feedback, zero popups)
 window.addEventListener('click', (event) => {
-  if (event.target.closest('.site-header')) return;
+  // Ignore clicks on UI elements
+  if (
+    event.target.closest('.nav-menu-wrapper') ||
+    event.target.closest('.controls-dock') ||
+    event.target.closest('.modal-card')
+  ) {
+    return;
+  }
   conductor.resetIdle();
 
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -293,7 +388,6 @@ window.addEventListener('click', (event) => {
 
   if (intersects.length > 0) {
     let hit = intersects[0].object;
-    // Find named parent
     let namedParent = hit;
     while (namedParent && !namedParent.name && namedParent !== tower.group) {
       namedParent = namedParent.parent;
@@ -302,16 +396,16 @@ window.addEventListener('click', (event) => {
     const name = namedParent ? namedParent.name : '';
 
     if (name === 'cauldron' || hit.material === tower.materials.potionGlow) {
-      // Cauldron burst on click!
       particles.triggerCauldronBurst();
       audio.playBubble();
+      showToast('✨ Cauldron Elixir Bubbles!');
     } else if (name === 'telescope' || name === 'wizardRoof' || name === 'chimney') {
       audio.playChime();
     }
   }
 });
 
-// 7. Master Animation & Render Loop
+// 8. Master Animation & Render Loop
 let lastTime = performance.now();
 
 function animate(currentTime) {
@@ -324,6 +418,17 @@ function animate(currentTime) {
   // Update OrbitControls if active
   if (controls.enabled) {
     controls.update();
+  } else if (waypointMode) {
+    // Smooth camera flight toward landmark waypoint
+    currentCamPos.lerp(waypointCamPos, 0.08);
+    currentCamTarget.lerp(waypointTarget, 0.08);
+
+    camera.position.copy(currentCamPos);
+    camera.lookAt(currentCamTarget);
+
+    targetFov = getAdaptiveFOV(waypointFov, camera.aspect);
+    camera.fov += (targetFov - camera.fov) * 0.08;
+    camera.updateProjectionMatrix();
   }
 
   // Update floating island breathing bob
@@ -336,7 +441,7 @@ function animate(currentTime) {
   // Update island and camera foreground clouds
   clouds.update(dt, time);
 
-  // Update Moon, rich starfield, and shooting stars
+  // Update Sun, Moon, rich starfield, and shooting stars
   celestial.update(dt, time);
 
   // Update background clouds & twinkling stars

@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/wizard-head.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body class="theme-sunset">
@@ -21,48 +21,140 @@
   <!-- Persistent WebGL Canvas -->
   <canvas id="webgl"></canvas>
 
-  <!-- Navigation / Control Header -->
-  <header class="site-header">
-    <div class="header-brand">
-      <span class="brand-glyph">✦</span>
-      <div>
-        <h1 class="brand-title">ASTROMANCER'S SPIRE</h1>
-        <p class="brand-subtitle">Low-Poly 3D Architectural Odyssey</p>
+  <!-- TOP-LEFT: Floating Dropdown Menu -->
+  <nav class="nav-menu-wrapper" aria-label="Main Navigation">
+    <button id="menu-toggle-btn" class="menu-circle-btn" aria-expanded="false" aria-label="Open Navigation Menu">
+      <span class="hamburger-icon">
+        <span class="bar bar-1"></span>
+        <span class="bar bar-2"></span>
+        <span class="bar bar-3"></span>
+      </span>
+      <span class="close-icon hidden">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+          <line x1="5" y1="5" x2="19" y2="19"></line>
+          <line x1="19" y1="5" x2="5" y2="19"></line>
+        </svg>
+      </span>
+    </button>
+
+    <!-- Dropdown Menu Stack (Solid Tactile Pills) -->
+    <div id="nav-menu-drawer" class="nav-menu-drawer hidden">
+      <div class="menu-pills-list">
+        <button class="menu-pill-btn active" data-target="sanctuary">The Sanctuary</button>
+        <button class="menu-pill-btn" data-target="pumpkin">Pumpkin Grove</button>
+        <button class="menu-pill-btn" data-target="cottage">Cottage Outpost</button>
+        <button class="menu-pill-btn" data-target="orbit" id="menu-orbit-btn">Free Orbit</button>
+        <button class="menu-pill-btn" data-target="about">About</button>
       </div>
+      <div class="menu-footer">Made with love by Abinash</div>
+    </div>
+  </nav>
+
+  <!-- TOP-RIGHT: Solid Tactile Controls Dock -->
+  <aside class="controls-dock" aria-label="Environment and Sound Controls">
+    <!-- Atmosphere Selector Pill Group -->
+    <div class="atmosphere-pill-group">
+      <button class="theme-pill-btn active" data-theme="sunset" title="Sunset Atmosphere">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 18a5 5 0 0 0-10 0" />
+          <line x1="12" y1="2" x2="12" y2="9" />
+          <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" />
+          <line x1="1" y1="18" x2="23" y2="18" />
+          <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+          <line x1="23" y1="22" x2="1" y2="22" />
+        </svg>
+        <span>Sunset</span>
+      </button>
+
+      <button class="theme-pill-btn" data-theme="night" title="Night Atmosphere">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <span>Night</span>
+      </button>
+
+      <button class="theme-pill-btn" data-theme="day" title="Day Atmosphere">
+        <svg class="pill-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5" fill="currentColor" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <span>Day</span>
+      </button>
     </div>
 
-    <div class="header-controls">
-      <!-- Time of Day Switcher -->
-      <div class="control-group">
-        <span class="control-label">ATMOSPHERE</span>
-        <div class="theme-buttons">
-          <button class="theme-btn active" data-theme="sunset" title="Sunset Dusk (Inspiration match)">🌅 Sunset</button>
-          <button class="theme-btn" data-theme="night" title="Starlit Midnight">🌙 Night</button>
-          <button class="theme-btn" data-theme="day" title="Fresh Daylight">☀️ Day</button>
+    <!-- Audio Ambience Pill Button -->
+    <button id="audio-toggle-btn" class="audio-circle-btn" title="Toggle Ambient Audio" aria-label="Toggle Sound">
+      <svg class="sound-icon-on hidden" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+      <svg class="sound-icon-off" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon>
+        <line x1="23" y1="9" x2="17" y2="15"></line>
+        <line x1="17" y1="9" x2="23" y2="15"></line>
+      </svg>
+    </button>
+  </aside>
+
+  <!-- CENTER: Solid About Modal Dialog -->
+  <div id="about-modal" class="modal-backdrop hidden" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <button id="modal-close-btn" class="modal-close-btn" aria-label="Close About Dialog">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+          <line x1="5" y1="5" x2="19" y2="19"></line>
+          <line x1="19" y1="5" x2="5" y2="19"></line>
+        </svg>
+      </button>
+
+      <div class="modal-header">
+        <span class="modal-badge">SANCTUARY ARCHIVE</span>
+        <h2 class="modal-title">ASTROMANCER'S SPIRE</h2>
+        <p class="modal-subtitle">An Interactive Low-Poly 3D Architectural Odyssey</p>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-section">
+          <h3>THE WORLD</h3>
+          <p>Perched high above the cloud line, the Astromancer's Spire rests at the confluence of celestial leylines. From the crooked slate tower that bends toward northern constellations, to the glowing pumpkin grove of alchemical draughts and the apprentice's cottage keeping watch over the horizons, each island floats in peaceful harmony.</p>
+        </div>
+
+        <div class="modal-section">
+          <h3>INTERACTION</h3>
+          <ul class="modal-list">
+            <li><strong>Scroll / Swipe:</strong> Journey down through the observatory, tudor study, ancient stone masonry, and glowing cauldron.</li>
+            <li><strong>Atmospheres:</strong> Switch between <strong>Sunset</strong>, <strong>Night</strong>, and <strong>Day</strong> in the top-right dock to watch the sun and moon rise.</li>
+            <li><strong>Explore:</strong> Switch to <strong>Free Orbit</strong> to inspect the architecture from any 3D angle.</li>
+          </ul>
+        </div>
+
+        <div class="modal-section">
+          <h3>CRAFT</h3>
+          <p>Built with real-time WebGL &amp; Three.js, procedural low-poly geometry, custom lighting shaders, and synthetic Web Audio.</p>
         </div>
       </div>
 
-      <!-- Mode Switcher: Scroll vs Orbit -->
-      <div class="control-group">
-        <span class="control-label">CAMERA</span>
-        <button id="toggle-orbit-btn" class="toggle-btn" title="Toggle between Guided Scroll and Free 360° Inspection">
-          <span class="btn-icon">🔄</span> <span class="btn-text">Free Orbit</span>
-        </button>
+      <div class="modal-footer">
+        <span>Made with love by <strong>Abinash</strong></span>
       </div>
-
-      <!-- Audio Ambience Toggle -->
-      <button id="audio-toggle-btn" class="audio-btn" title="Toggle Ambient Audio">
-        <span class="audio-icon">🔇</span>
-      </button>
     </div>
-  </header>
+  </div>
 
-  <!-- Bottom Progress Bar -->
+  <!-- BOTTOM: Subtitle / Waypoint Toast -->
+  <div id="landmark-toast" class="landmark-toast hidden" role="status"></div>
+
+  <!-- Bottom Scroll Progress Bar -->
   <div class="progress-bar-container">
     <div class="progress-bar-fill" id="progress-fill"></div>
   </div>
 
-  <!-- Native Document Scroll Track Sections (Clean, cards removed) -->
+  <!-- Native Document Scroll Track Sections -->
   <main class="scroll-container">
     <section class="story-section" data-chapter="0"></section>
     <section class="story-section" data-chapter="1"></section>
