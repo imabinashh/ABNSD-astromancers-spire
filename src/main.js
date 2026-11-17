@@ -67,14 +67,34 @@ let targetFov = 42;
 
 // Cinematic Idle Auto-Orbit State
 let idleWeight = 0;
-let idleAngle = 0.9;
+let sanctuaryOrbitAngle = 0.9;
+let islandOrbitAngle = 0;
 const towerCenterTarget = new THREE.Vector3(0, 5.8, 0);
 const tempIdlePos = new THREE.Vector3();
 const blendedCamPos = new THREE.Vector3();
 const blendedCamTarget = new THREE.Vector3();
+const waypointOrbitPos = new THREE.Vector3();
+const sanctuaryOrbitPos = new THREE.Vector3();
+
+// Global User Activity & Idle Tracking
+let userIdleTime = 0;
+const IDLE_TRIGGER = 2.4; // 2.4 seconds of inactivity
+
+function resetUserIdle() {
+  userIdleTime = 0;
+}
+
+window.addEventListener('mousemove', resetUserIdle, { passive: true });
+window.addEventListener('mousedown', resetUserIdle, { passive: true });
+window.addEventListener('touchstart', resetUserIdle, { passive: true });
+window.addEventListener('touchmove', resetUserIdle, { passive: true });
+window.addEventListener('wheel', resetUserIdle, { passive: true });
+window.addEventListener('scroll', resetUserIdle, { passive: true });
+window.addEventListener('keydown', resetUserIdle, { passive: true });
 
 // Landmark Waypoint Camera State
 let waypointMode = false;
+let activeWaypointId = 'sanctuary';
 const waypointCamPos = new THREE.Vector3();
 const waypointTarget = new THREE.Vector3();
 let waypointFov = 42;
@@ -98,7 +118,7 @@ if (window.matchMedia('(pointer: fine)').matches) {
   });
 }
 
-// Toast Helper
+// Toast Helper (Cardless floating text at top center)
 function showToast(text) {
   if (!landmarkToast) return;
   landmarkToast.textContent = text;
@@ -110,14 +130,18 @@ function showToast(text) {
 }
 
 // Fly smoothly to landmark
-function flyToWaypoint(camPos, targetPos, fov, toastText) {
+function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark') {
   if (controls.enabled) {
     disableFreeOrbit();
   }
   waypointMode = true;
+  activeWaypointId = waypointId;
   waypointCamPos.copy(camPos);
   waypointTarget.copy(targetPos);
   waypointFov = fov;
+  islandOrbitAngle = Math.atan2(camPos.x - targetPos.x, camPos.z - targetPos.z);
+  sanctuaryOrbitAngle = Math.atan2(camPos.x, camPos.z);
+  resetUserIdle();
   conductor.resetIdle();
   showToast(toastText);
 }
@@ -139,28 +163,28 @@ const conductor = createScrollConductor({
     // Sample camera choreography track
     const sample = cameraTrack.getSample(smooth);
 
-    if (!controls.enabled) {
-      // Smoothly interpolate current camera position and target
-      currentCamPos.lerp(sample.position, 0.12);
-      currentCamTarget.lerp(sample.target, 0.12);
-
-      // Check if user is idle for cinematic auto-orbit
+    if (!controls.enabled && !waypointMode) {
+      // Check if user is idle for cinematic auto-orbit in guided scroll
+      const isIdle = userIdleTime >= IDLE_TRIGGER;
       const targetIdleWeight = isIdle ? 1.0 : 0.0;
-      idleWeight += (targetIdleWeight - idleWeight) * 0.04;
+      idleWeight += (targetIdleWeight - idleWeight) * 0.035;
 
       if (idleWeight > 0.01) {
         // Orbit around tower center smoothly
-        idleAngle += 0.0035;
-        const currentDist = Math.hypot(currentCamPos.x, currentCamPos.z);
-        const orbitRadius = Math.max(16.0, Math.min(30.0, currentDist));
-        const orbitHeight = Math.max(8.0, currentCamPos.y);
+        sanctuaryOrbitAngle += 0.0028;
+        const currentDist = Math.hypot(sample.position.x, sample.position.z);
+        const orbitRadius = Math.max(16.0, Math.min(28.0, currentDist));
+        const orbitHeight = Math.max(8.0, sample.position.y);
 
         tempIdlePos.set(
-          Math.sin(idleAngle) * orbitRadius,
+          Math.sin(sanctuaryOrbitAngle) * orbitRadius,
           orbitHeight,
-          Math.cos(idleAngle) * orbitRadius
+          Math.cos(sanctuaryOrbitAngle) * orbitRadius
         );
       }
+
+      currentCamPos.lerp(sample.position, 0.12);
+      currentCamTarget.lerp(sample.target, 0.12);
 
       blendedCamPos.lerpVectors(currentCamPos, tempIdlePos, idleWeight);
       blendedCamTarget.lerpVectors(currentCamTarget, towerCenterTarget, idleWeight);
@@ -283,14 +307,21 @@ function rotateCamera(angle) {
 }
 
 function resetCameraView() {
-  if (!controls.enabled) enableFreeOrbit();
-  conductor.resetIdle();
-  controls.target.set(0, 5.8, 0);
-  camera.position.set(18.5, 14.8, 23.5);
-  camera.fov = 42;
-  camera.updateProjectionMatrix();
-  controls.update();
-  showToast('⟲ Camera View Reset');
+  if (controls.enabled) {
+    disableFreeOrbit();
+  }
+  flyToWaypoint(
+    new THREE.Vector3(18.5, 14.8, 23.5),
+    new THREE.Vector3(0, 5.8, 0),
+    42,
+    '✦ Full Archipelago View Reset',
+    'sanctuary'
+  );
+  conductor.setProgress(0.0, false);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  menuPillBtns.forEach(b => b.classList.remove('active'));
+  const sanctuaryBtn = document.querySelector('.menu-pill-btn[data-target="sanctuary"]');
+  if (sanctuaryBtn) sanctuaryBtn.classList.add('active');
 }
 
 if (camResetBtn) camResetBtn.addEventListener('click', resetCameraView);
@@ -351,7 +382,8 @@ menuPillBtns.forEach(btn => {
         new THREE.Vector3(18.5, 14.8, 23.5),
         new THREE.Vector3(0, 5.8, 0),
         42,
-        '✦ The Sanctuary • Full Archipelago View'
+        '✦ The Sanctuary • Full Archipelago View',
+        'sanctuary'
       );
       conductor.setProgress(0.0, false);
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -361,7 +393,8 @@ menuPillBtns.forEach(btn => {
         new THREE.Vector3(-6.2, 3.8, 14.2),
         new THREE.Vector3(-11.5, 0.8, 5.0),
         40,
-        '🎃 Pumpkin Grove • The Alchemist\'s Garden'
+        '🎃 Pumpkin Grove • The Alchemist\'s Garden',
+        'pumpkin'
       );
       audio.playBubble();
     } else if (target === 'cottage') {
@@ -369,7 +402,8 @@ menuPillBtns.forEach(btn => {
         new THREE.Vector3(17.8, 4.2, 5.2),
         new THREE.Vector3(11.5, 1.4, -4.5),
         38,
-        '🌙 Cottage Outpost • The Apprentice\'s Watch'
+        '🌙 Cottage Outpost • The Apprentice\'s Watch',
+        'cottage'
       );
       audio.playChime();
     } else if (target === 'orbit') {
@@ -503,13 +537,51 @@ function animate(currentTime) {
   const time = currentTime * 0.001;
   lastTime = currentTime;
 
-  // Update OrbitControls if active
+  userIdleTime += dt;
+  const isIdle = userIdleTime >= IDLE_TRIGGER;
+  const idleActiveDuration = Math.max(0, userIdleTime - IDLE_TRIGGER);
+
+  // 1. Free Orbit Mode
   if (controls.enabled) {
+    if (isIdle) {
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.55;
+    } else {
+      controls.autoRotate = false;
+    }
     controls.update();
   } else if (waypointMode) {
-    // Smooth camera flight toward landmark waypoint
-    currentCamPos.lerp(waypointCamPos, 0.07);
-    currentCamTarget.lerp(waypointTarget, 0.07);
+    // 2. Waypoint Landmark Mode (Pumpkin Grove, Cottage Outpost, or Sanctuary)
+    if (isIdle) {
+      // If at an island, first orbit that island for 6.5s, then slowly zoom out to orbit the whole sanctuary
+      if (activeWaypointId !== 'sanctuary' && idleActiveDuration < 6.5) {
+        islandOrbitAngle += 0.0035;
+        const islandRadius = 10.5;
+        const orbitX = waypointTarget.x + Math.sin(islandOrbitAngle) * islandRadius;
+        const orbitY = waypointCamPos.y + 0.3;
+        const orbitZ = waypointTarget.z + Math.cos(islandOrbitAngle) * islandRadius;
+        waypointOrbitPos.set(orbitX, orbitY, orbitZ);
+
+        currentCamPos.lerp(waypointOrbitPos, 0.045);
+        currentCamTarget.lerp(waypointTarget, 0.05);
+      } else {
+        // Slowly zooms out and orbits the whole sanctuary again!
+        sanctuaryOrbitAngle += 0.0028;
+        const sanctuaryRadius = 23.5;
+        const orbitX = Math.sin(sanctuaryOrbitAngle) * sanctuaryRadius;
+        const orbitY = 14.5;
+        const orbitZ = Math.cos(sanctuaryOrbitAngle) * sanctuaryRadius;
+        sanctuaryOrbitPos.set(orbitX, orbitY, orbitZ);
+
+        currentCamPos.lerp(sanctuaryOrbitPos, 0.026);
+        currentCamTarget.lerp(towerCenterTarget, 0.035);
+        targetFov = 42;
+      }
+    } else {
+      // User is actively looking at the landmark
+      currentCamPos.lerp(waypointCamPos, 0.07);
+      currentCamTarget.lerp(waypointTarget, 0.07);
+    }
 
     // Subtle organic parallax
     mouse.x += (mouse.targetX - mouse.x) * 0.05;
@@ -525,7 +597,7 @@ function animate(currentTime) {
     camera.fov += (targetFov - camera.fov) * 0.07;
     camera.updateProjectionMatrix();
 
-    // Keep OrbitControls pivot aligned with landmark
+    // Keep OrbitControls pivot aligned with current focus
     controls.target.copy(currentCamTarget);
   }
 

@@ -477,35 +477,31 @@ body.mode-free-orbit .scroll-container {
 }
 
 /* ========================================================
-   LANDMARK TOAST NOTIFICATION
+   LANDMARK & ATMOSPHERE FLOATING NOTIFICATION (Cardless)
    ======================================================== */
 .landmark-toast {
   position: fixed;
-  bottom: 2.2rem;
+  top: 5.6rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 96;
-  background: #ffffff;
-  color: #0d1424;
+  background: transparent;
+  color: #ffffff;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  padding: 0.65rem 1.4rem;
-  border-radius: 9999px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.03em;
+  padding: 0.2rem 1.0rem;
+  border: none;
+  box-shadow: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   white-space: nowrap;
-  animation: toastFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  transition: bottom 0.25s ease;
+  animation: toastFloatDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-body.mode-free-orbit .landmark-toast {
-  bottom: 6.8rem;
-}
-
-@keyframes toastFadeIn {
-  0% { opacity: 0; transform: translate(-50%, 12px); }
+@keyframes toastFloatDown {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
   100% { opacity: 1; transform: translate(-50%, 0); }
 }
 
@@ -735,8 +731,8 @@ body.mode-free-orbit .landmark-toast {
   }
 
   .landmark-toast {
-    font-size: 0.8rem;
-    padding: 0.55rem 1.1rem;
-    bottom: 1.5rem;
+    font-size: 0.82rem;
+    top: 4.8rem;
+    padding: 0.2rem 0.5rem;
   }
 }
