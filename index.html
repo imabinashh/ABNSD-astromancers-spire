@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Astromancer's Spire — Low Poly 3D Journey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="theme-sunset">
+  <!-- Dynamic Sky Atmosphere Background -->
+  <div id="sky-backdrop" class="sky-backdrop"></div>
+
+  <!-- Persistent WebGL Canvas -->
+  <canvas id="webgl"></canvas>
+
+  <!-- Navigation / Control Header -->
+  <header class="site-header">
+    <div class="header-brand">
+      <span class="brand-glyph">✦</span>
+      <div>
+        <h1 class="brand-title">ASTROMANCER'S SPIRE</h1>
+        <p class="brand-subtitle">Low-Poly 3D Architectural Odyssey</p>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <!-- Time of Day Switcher -->
+      <div class="control-group">
+        <span class="control-label">ATMOSPHERE</span>
+        <div class="theme-buttons">
+          <button class="theme-btn active" data-theme="sunset" title="Sunset Dusk (Inspiration match)">🌅 Sunset</button>
+          <button class="theme-btn" data-theme="night" title="Starlit Midnight">🌙 Night</button>
+          <button class="theme-btn" data-theme="day" title="Fresh Daylight">☀️ Day</button>
+        </div>
+      </div>
+
+      <!-- Mode Switcher: Scroll vs Orbit -->
+      <div class="control-group">
+        <span class="control-label">CAMERA</span>
+        <button id="toggle-orbit-btn" class="toggle-btn" title="Toggle between Guided Scroll and Free 360° Inspection">
+          <span class="btn-icon">🔄</span> <span class="btn-text">Free Orbit</span>
+        </button>
+      </div>
+
+      <!-- Audio Ambience Toggle -->
+      <button id="audio-toggle-btn" class="audio-btn" title="Toggle Ambient Audio">
+        <span class="audio-icon">🔇</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive Hotspot Overlay Tooltip -->
+  <div id="hotspot-popup" class="hotspot-popup hidden">
+    <button id="hotspot-close" class="hotspot-close">&times;</button>
+    <div class="hotspot-tag">DISCOVERY</div>
+    <h3 id="hotspot-title" class="hotspot-heading">Landmark</h3>
+    <p id="hotspot-desc" class="hotspot-text">Description</p>
+    <button id="hotspot-action" class="hotspot-action-btn hidden">Stir Potion</button>
+  </div>
+
+  <!-- Bottom Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+
+  <!-- Native Document Scroll Track Sections (Clean, cards removed) -->
+  <main class="scroll-container">
+    <section class="story-section" data-chapter="0"></section>
+    <section class="story-section" data-chapter="1"></section>
+    <section class="story-section" data-chapter="2"></section>
+    <section class="story-section" data-chapter="3"></section>
+    <section class="story-section" data-chapter="4"></section>
+    <section class="story-section" data-chapter="5"></section>
+    <section class="story-section" data-chapter="6"></section>
+    <section class="story-section" data-chapter="7"></section>
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
