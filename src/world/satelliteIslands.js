@@ -4,7 +4,7 @@ import * as THREE from 'three';
 // 1. Left Island: The Alchemist's Pumpkin Grove with Gnarled Tree & Hanging Lantern,
 //    connected via a rustic arched wooden footbridge.
 // 2. Right Island: The Astromancer's Miniature Cottage Outpost with Teal Shingle Roof,
-//    Lookout Turret & Crescent Moon Spire, connected via floating levitating stepping stones.
+//    Watchtower Lookout Turret & Crescent Moon Spire, connected via levitating stepping stones.
 export function createSatelliteIslands(scene) {
   const masterGroup = new THREE.Group();
   masterGroup.name = 'satelliteArchipelago';
@@ -168,6 +168,7 @@ export function createSatelliteIslands(scene) {
   // ==============================================================
   // 1. LEFT SATELLITE ISLAND: THE PUMPKIN GROVE & GNARLED TREE
   // Position: (-11.5, -0.6, 5.0)
+  // Clean, contiguous gnarled tree with hanging lantern (NO floating fragments!)
   // ==============================================================
   const leftIslandGroup = new THREE.Group();
   leftIslandGroup.name = 'pumpkinGroveIsland';
@@ -177,41 +178,49 @@ export function createSatelliteIslands(scene) {
   const leftBase = createIslandBase(3.3, 4.4, 14);
   leftIslandGroup.add(leftBase);
 
-  // Gnarled Crooked Tree
+  // Gnarled Crooked Tree (One solid, seamlessly connected sculpted structure)
   const treeGroup = new THREE.Group();
   treeGroup.position.set(0.6, 0.0, -0.4);
 
-  // Segmented twisted trunk
-  const trunkSegments = [
-    { radiusBottom: 0.35, radiusTop: 0.28, height: 1.2, posX: 0, posY: 0.6, posZ: 0, rotZ: 0.12, rotX: -0.08 },
-    { radiusBottom: 0.28, radiusTop: 0.22, height: 1.1, posX: -0.15, posY: 1.6, posZ: 0.08, rotZ: 0.28, rotX: -0.14 },
-    { radiusBottom: 0.22, radiusTop: 0.15, height: 1.0, posX: -0.42, posY: 2.5, posZ: 0.22, rotZ: 0.45, rotX: -0.18 }
-  ];
-  trunkSegments.forEach(s => {
-    const geo = new THREE.CylinderGeometry(s.radiusTop, s.radiusBottom, s.height, 6);
-    const m = new THREE.Mesh(geo, mats.woodDark);
-    m.position.set(s.posX, s.posY, s.posZ);
-    m.rotation.set(s.rotX, 0, s.rotZ);
-    treeGroup.add(m);
-  });
+  // 1. Trunk Base
+  const trunkBaseGeo = new THREE.CylinderGeometry(0.32, 0.45, 1.2, 6);
+  const trunkBase = new THREE.Mesh(trunkBaseGeo, mats.woodDark);
+  trunkBase.position.set(0, 0.6, 0);
+  trunkBase.rotation.set(-0.06, 0, 0.12);
+  treeGroup.add(trunkBase);
 
-  // Long twisted overarching branch where lantern hangs
-  const mainBranchGeo = new THREE.CylinderGeometry(0.1, 0.16, 1.8, 5);
+  // 2. Trunk Mid Section (Smoothly overlaps base)
+  const trunkMidGeo = new THREE.CylinderGeometry(0.24, 0.32, 1.1, 6);
+  const trunkMid = new THREE.Mesh(trunkMidGeo, mats.woodDark);
+  trunkMid.position.set(-0.14, 1.55, 0.08);
+  trunkMid.rotation.set(-0.12, 0, 0.28);
+  treeGroup.add(trunkMid);
+
+  // 3. Trunk Top / Crest (Smoothly connects to mid section)
+  const trunkTopGeo = new THREE.CylinderGeometry(0.18, 0.24, 1.0, 6);
+  const trunkTop = new THREE.Mesh(trunkTopGeo, mats.woodDark);
+  trunkTop.position.set(-0.38, 2.45, 0.18);
+  trunkTop.rotation.set(-0.16, 0, 0.42);
+  treeGroup.add(trunkTop);
+
+  // 4. Overarching Branch (Solidly anchored directly into the top of trunk)
+  // Reaches outward over the pumpkin patch and terminates where the lantern hangs
+  const mainBranchGeo = new THREE.CylinderGeometry(0.10, 0.18, 1.9, 5);
   const mainBranch = new THREE.Mesh(mainBranchGeo, mats.woodDark);
-  mainBranch.position.set(-1.05, 2.9, 0.4);
-  mainBranch.rotation.set(-0.2, 0.4, 1.25);
+  mainBranch.position.set(-1.08, 2.82, 0.38);
+  mainBranch.rotation.set(-0.18, 0.35, 1.22);
   treeGroup.add(mainBranch);
 
-  // Secondary crooked twig branch
-  const subBranchGeo = new THREE.CylinderGeometry(0.06, 0.1, 1.0, 5);
-  const subBranch = new THREE.Mesh(subBranchGeo, mats.woodDark);
-  subBranch.position.set(0.1, 2.6, -0.3);
-  subBranch.rotation.set(0.5, -0.3, -0.6);
-  treeGroup.add(subBranch);
+  // Branch tip spur
+  const spurGeo = new THREE.CylinderGeometry(0.04, 0.09, 0.45, 4);
+  const spur = new THREE.Mesh(spurGeo, mats.woodDark);
+  spur.position.set(-1.85, 3.12, 0.58);
+  spur.rotation.set(-0.1, 0.2, 0.8);
+  treeGroup.add(spur);
 
-  // Hanging Pumpkin Lantern (pendulum assembly)
+  // Hanging Pumpkin Lantern (pendulum assembly anchored to branch)
   const lanternPendulum = new THREE.Group();
-  lanternPendulum.position.set(-1.75, 2.7, 0.65);
+  lanternPendulum.position.set(-1.75, 2.7, 0.55);
 
   // Hanging dark cord/vine
   const cordGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.75, 4);
@@ -232,7 +241,6 @@ export function createSatelliteIslands(scene) {
   const lanternFaceGeo = new THREE.PlaneGeometry(0.26, 0.18);
   const lanternFace = new THREE.Mesh(lanternFaceGeo, mats.pumpkinGlow);
   lanternFace.position.set(0, 0, 0.35);
-  lanternFace.rotation.y = 0;
   lanternHead.add(lanternFace);
 
   // Warm pumpkin point light
@@ -292,38 +300,7 @@ export function createSatelliteIslands(scene) {
     leftIslandGroup.add(cob);
   }
 
-  // Two tiny stylized low-poly bats flittering near the tree
-  const bats = [];
-  for (let b = 0; b < 2; b++) {
-    const batGroup = new THREE.Group();
-    batGroup.position.set(-0.8 + b * 1.2, 3.2 + b * 0.5, 0.3 - b * 0.6);
-
-    const batBodyGeo = new THREE.ConeGeometry(0.08, 0.2, 4);
-    batBodyGeo.rotateX(Math.PI / 2);
-    const batBody = new THREE.Mesh(batBodyGeo, mats.rockDark);
-    batGroup.add(batBody);
-
-    const wingGeo = new THREE.BufferGeometry();
-    const wingVerts = new Float32Array([
-      0, 0, 0,
-      -0.25, 0.05, -0.1,
-      -0.18, -0.05, 0.15
-    ]);
-    wingGeo.setAttribute('position', new THREE.BufferAttribute(wingVerts, 3));
-    wingGeo.computeVertexNormals();
-
-    const wingL = new THREE.Mesh(wingGeo, mats.rockDark);
-    const wingR = new THREE.Mesh(wingGeo, mats.rockDark);
-    wingR.scale.x = -1;
-
-    batGroup.add(wingL);
-    batGroup.add(wingR);
-    leftIslandGroup.add(batGroup);
-    bats.push({ group: batGroup, wingL, wingR, baseY: batGroup.position.y, phase: b * Math.PI });
-  }
-
   // Rustic Wooden Arched Footbridge (Connecting Main Island to Left Island)
-  // Spans from main island (-6.2, -0.2, 4.2) to left island (-9.0, -0.5, 4.8)
   const bridgeGroup = new THREE.Group();
   bridgeGroup.name = 'woodenFootbridge';
 
@@ -333,18 +310,15 @@ export function createSatelliteIslands(scene) {
 
   for (let i = 0; i <= plankCount; i++) {
     const t = i / plankCount;
-    // Arch curvature
     const archH = Math.sin(t * Math.PI) * 0.42;
     const px = THREE.MathUtils.lerp(bridgeStartX, bridgeEndX, t);
     const py = THREE.MathUtils.lerp(bridgeStartY, bridgeEndY, t) + archH;
     const pz = THREE.MathUtils.lerp(bridgeStartZ, bridgeEndZ, t);
 
-    // Plank
     const plankGeo = new THREE.BoxGeometry(0.32, 0.08, 0.88);
     const plank = new THREE.Mesh(plankGeo, (i % 2 === 0) ? mats.woodPlank : mats.wood);
     plank.position.set(px, py, pz);
 
-    // Angle to follow bridge direction and arch slope
     const dx = bridgeEndX - bridgeStartX;
     const dz = bridgeEndZ - bridgeStartZ;
     const angleY = Math.atan2(dx, dz);
@@ -352,7 +326,6 @@ export function createSatelliteIslands(scene) {
     plank.rotation.x = Math.cos(t * Math.PI) * -0.2;
     bridgeGroup.add(plank);
 
-    // Bridge Posts & Ropes on both sides (at intervals)
     if (i === 1 || i === 4 || i === 7) {
       const postGeo = new THREE.CylinderGeometry(0.04, 0.05, 0.65, 5);
       const postL = new THREE.Mesh(postGeo, mats.woodDark);
@@ -375,6 +348,7 @@ export function createSatelliteIslands(scene) {
   // ==============================================================
   // 2. RIGHT SATELLITE ISLAND: THE APPRENTICE'S COTTAGE OUTPOST
   // Position: (11.5, -0.7, -4.5)
+  // Solid, fully-connected low-poly architecture with top house night light!
   // ==============================================================
   const rightIslandGroup = new THREE.Group();
   rightIslandGroup.name = 'cottageOutpostIsland';
@@ -384,19 +358,19 @@ export function createSatelliteIslands(scene) {
   const rightBase = createIslandBase(3.5, 4.6, 14);
   rightIslandGroup.add(rightBase);
 
-  // Miniature Fantasy Cottage Model (Inspired by Image 2)
+  // Miniature Fantasy Cottage Model
   const cottage = new THREE.Group();
   cottage.position.set(-0.2, 0.0, 0.2);
-  cottage.rotation.y = -0.4; // angled invitingly towards camera
+  cottage.rotation.y = -0.4;
 
-  // Ground Floor Timber & Stone Body
-  const baseW = 1.9, baseH = 1.7, baseD = 2.1;
+  // 1. Ground Floor Main Body (y: 0 to 1.6)
+  const baseW = 1.9, baseH = 1.6, baseD = 2.1;
   const bodyGeo = new THREE.BoxGeometry(baseW, baseH, baseD);
   const bodyMesh = new THREE.Mesh(bodyGeo, mats.cottageWall);
   bodyMesh.position.y = baseH * 0.5;
   cottage.add(bodyMesh);
 
-  // Corner Stone & Wood Trim Posts
+  // Corner Timber Posts
   const cornerGeo = new THREE.BoxGeometry(0.24, baseH + 0.05, 0.24);
   const corners = [
     [-baseW * 0.5, baseH * 0.5, -baseD * 0.5],
@@ -413,102 +387,151 @@ export function createSatelliteIslands(scene) {
   // Front Arched Wooden Door with Stone Frame
   const doorGeo = new THREE.BoxGeometry(0.68, 1.15, 0.08);
   const doorMesh = new THREE.Mesh(doorGeo, mats.woodDark);
-  doorMesh.position.set(0, 0.6, baseD * 0.5 + 0.04);
+  doorMesh.position.set(0, 0.58, baseD * 0.5 + 0.04);
   cottage.add(doorMesh);
 
   // Triangular stone keystone above door
   const stonePeakGeo = new THREE.ConeGeometry(0.22, 0.35, 3);
   const stonePeak = new THREE.Mesh(stonePeakGeo, mats.stoneLight);
-  stonePeak.position.set(0, 1.35, baseD * 0.5 + 0.06);
+  stonePeak.position.set(0, 1.32, baseD * 0.5 + 0.06);
   stonePeak.rotation.z = Math.PI;
   cottage.add(stonePeak);
 
   // Glowing Diamond Window on Front
   const winGeo = new THREE.PlaneGeometry(0.28, 0.28);
   const winMesh = new THREE.Mesh(winGeo, mats.windowGlow);
-  winMesh.position.set(0, 1.35, baseD * 0.5 + 0.08);
-  winMesh.rotation.z = Math.PI / 4; // diamond orientation
+  winMesh.position.set(0, 1.32, baseD * 0.5 + 0.08);
+  winMesh.rotation.z = Math.PI / 4;
   cottage.add(winMesh);
 
   // Side Balcony Platform with Wood Railing
   const balconyGeo = new THREE.BoxGeometry(0.65, 0.12, 1.1);
   const balcony = new THREE.Mesh(balconyGeo, mats.wood);
-  balcony.position.set(-baseW * 0.5 - 0.3, 1.15, 0.0);
+  balcony.position.set(-baseW * 0.5 - 0.3, 1.12, 0.0);
   cottage.add(balcony);
 
   const railingGeo = new THREE.BoxGeometry(0.08, 0.38, 1.1);
   const railing = new THREE.Mesh(railingGeo, mats.woodDark);
-  railing.position.set(-baseW * 0.5 - 0.58, 1.38, 0.0);
+  railing.position.set(-baseW * 0.5 - 0.58, 1.35, 0.0);
   cottage.add(railing);
 
-  // Main Steep Teal Shingle Roof (Image 2 signature color)
-  const roofH = 1.15;
-  const roofW = baseW + 0.55;
-  const roofD = baseD + 0.45;
-  const mainRoofGeo = new THREE.ConeGeometry(roofW * 0.72, roofH, 4);
-  mainRoofGeo.rotateY(Math.PI / 4);
-  const mainRoof = new THREE.Mesh(mainRoofGeo, mats.tealRoof);
-  mainRoof.position.set(0, baseH + roofH * 0.45, 0);
-  cottage.add(mainRoof);
-
-  // Teal Roof Trim Rim
-  const roofTrimGeo = new THREE.BoxGeometry(roofW, 0.14, roofD);
+  // 2. Main Teal Shingled Roof Trim (y: 1.62)
+  const roofW = baseW + 0.5;
+  const roofD = baseD + 0.4;
+  const roofTrimGeo = new THREE.BoxGeometry(roofW, 0.12, roofD);
   const roofTrim = new THREE.Mesh(roofTrimGeo, mats.tealRoofTrim);
-  roofTrim.position.set(0, baseH + 0.05, 0);
+  roofTrim.position.set(0, baseH + 0.06, 0);
   cottage.add(roofTrim);
 
-  // Elevated Lookout Watchtower / Turret
-  const turretW = 0.95, turretH = 1.3;
-  const turretBody = new THREE.Group();
-  turretBody.position.set(0, baseH + roofH + 0.1, 0);
+  // 3. Middle Tower Shaft (Rising seamlessly through the roof, y: 1.6 to 3.1)
+  // This completely connects the lower cottage body to the upper belfry!
+  const shaftW = 1.05, shaftH = 1.5, shaftD = 1.05;
+  const shaftGeo = new THREE.BoxGeometry(shaftW, shaftH, shaftD);
+  const shaftMesh = new THREE.Mesh(shaftGeo, mats.cottageWall);
+  shaftMesh.position.set(0, baseH + shaftH * 0.5, 0);
+  cottage.add(shaftMesh);
 
-  // 4 wooden pillars supporting turret roof
-  const pillarGeo = new THREE.CylinderGeometry(0.06, 0.07, turretH, 5);
-  const pillarOffsets = [
-    [-turretW * 0.4, turretH * 0.5, -turretW * 0.4],
-    [turretW * 0.4, turretH * 0.5, -turretW * 0.4],
-    [-turretW * 0.4, turretH * 0.5, turretW * 0.4],
-    [turretW * 0.4, turretH * 0.5, turretW * 0.4]
+  // Corner timber posts on the shaft
+  const sCornerGeo = new THREE.BoxGeometry(0.16, shaftH + 0.04, 0.16);
+  const sCorners = [
+    [-shaftW * 0.5, baseH + shaftH * 0.5, -shaftD * 0.5],
+    [shaftW * 0.5, baseH + shaftH * 0.5, -shaftD * 0.5],
+    [-shaftW * 0.5, baseH + shaftH * 0.5, shaftD * 0.5],
+    [shaftW * 0.5, baseH + shaftH * 0.5, shaftD * 0.5]
   ];
-  pillarOffsets.forEach(([px, py, pz]) => {
-    const pMesh = new THREE.Mesh(pillarGeo, mats.woodDark);
-    pMesh.position.set(px, py, pz);
-    turretBody.add(pMesh);
+  sCorners.forEach(([cx, cy, cz]) => {
+    const sc = new THREE.Mesh(sCornerGeo, mats.woodDark);
+    sc.position.set(cx, cy, cz);
+    cottage.add(sc);
   });
 
-  // Turret floor & half-walls
-  const tFloorGeo = new THREE.BoxGeometry(turretW, 0.15, turretW);
-  const tFloor = new THREE.Mesh(tFloorGeo, mats.wood);
-  turretBody.add(tFloor);
+  // Diamond window on the middle tower shaft
+  const shaftWinGeo = new THREE.PlaneGeometry(0.24, 0.24);
+  const shaftWin = new THREE.Mesh(shaftWinGeo, mats.windowGlow);
+  shaftWin.position.set(0, baseH + shaftH * 0.55, shaftD * 0.5 + 0.03);
+  shaftWin.rotation.z = Math.PI / 4;
+  cottage.add(shaftWin);
 
-  // Turret Conical Teal Roof
-  const tRoofGeo = new THREE.ConeGeometry(0.85, 0.95, 8);
+  // Main Sloped Teal Roof (Mansard / Hip slope wrapping the shaft, y: 1.68 to 2.45)
+  // 4-sided truncated cone forming the steep pitched roof around the shaft
+  const mainRoofGeo = new THREE.CylinderGeometry(0.72, 1.65, 0.85, 4);
+  mainRoofGeo.rotateY(Math.PI / 4);
+  const mainRoof = new THREE.Mesh(mainRoofGeo, mats.tealRoof);
+  mainRoof.position.set(0, baseH + 0.45, 0);
+  cottage.add(mainRoof);
+
+  // 4. Lookout Turret Platform & Trim (y: 3.1)
+  const turretPlatformGeo = new THREE.BoxGeometry(1.25, 0.14, 1.25);
+  const turretPlatform = new THREE.Mesh(turretPlatformGeo, mats.wood);
+  turretPlatform.position.set(0, baseH + shaftH + 0.07, 0);
+  cottage.add(turretPlatform);
+
+  // 5. Open Lookout Belfry / Watchtower Section (y: 3.17 to 4.27)
+  const belfryH = 1.1;
+  const belfryBaseY = baseH + shaftH + 0.14;
+  const belfryPillarGeo = new THREE.CylinderGeometry(0.06, 0.07, belfryH, 5);
+  const belfryPillarOffsets = [
+    [-0.44, belfryBaseY + belfryH * 0.5, -0.44],
+    [0.44, belfryBaseY + belfryH * 0.5, -0.44],
+    [-0.44, belfryBaseY + belfryH * 0.5, 0.44],
+    [0.44, belfryBaseY + belfryH * 0.5, 0.44]
+  ];
+  belfryPillarOffsets.forEach(([px, py, pz]) => {
+    const pMesh = new THREE.Mesh(belfryPillarGeo, mats.woodDark);
+    pMesh.position.set(px, py, pz);
+    cottage.add(pMesh);
+  });
+
+  // Hanging glowing lantern inside the open belfry (The Night Beacon!)
+  const turretLanternGroup = new THREE.Group();
+  turretLanternGroup.position.set(0, belfryBaseY + belfryH * 0.52, 0);
+
+  const lanternCoreGeo = new THREE.IcosahedronGeometry(0.18, 1);
+  const lanternCore = new THREE.Mesh(lanternCoreGeo, mats.windowGlow);
+  turretLanternGroup.add(lanternCore);
+
+  const lanternCageGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.28, 5);
+  const lanternCage = new THREE.Mesh(lanternCageGeo, mats.woodDark);
+  turretLanternGroup.add(lanternCage);
+
+  // Dedicated Top House Light (Brilliant beacon at night!)
+  const topHouseLight = new THREE.PointLight(0xffbe44, 1.8, 7.5, 1.1);
+  topHouseLight.position.set(0, 0, 0);
+  turretLanternGroup.add(topHouseLight);
+
+  cottage.add(turretLanternGroup);
+
+  // 6. Turret Conical Teal Roof (y: 4.27 to 5.27)
+  const tRoofTrimGeo = new THREE.CylinderGeometry(1.02, 1.06, 0.08, 8);
+  const tRoofTrim = new THREE.Mesh(tRoofTrimGeo, mats.tealRoofTrim);
+  tRoofTrim.position.set(0, belfryBaseY + belfryH + 0.04, 0);
+  cottage.add(tRoofTrim);
+
+  const tRoofGeo = new THREE.ConeGeometry(0.96, 0.98, 8);
   const tRoof = new THREE.Mesh(tRoofGeo, mats.tealRoof);
-  tRoof.position.y = turretH + 0.42;
-  turretBody.add(tRoof);
+  tRoof.position.set(0, belfryBaseY + belfryH + 0.53, 0);
+  cottage.add(tRoof);
 
-  // Brass Spire Pole
+  // 7. Brass Spire & Golden Crescent Moon Weather Vane (y: 5.27 to 6.2)
   const spirePoleGeo = new THREE.CylinderGeometry(0.03, 0.04, 0.85, 5);
   const spirePole = new THREE.Mesh(spirePoleGeo, mats.goldBrass);
-  spirePole.position.y = turretH + 1.25;
-  turretBody.add(spirePole);
+  spirePole.position.set(0, belfryBaseY + belfryH + 1.35, 0);
+  cottage.add(spirePole);
 
-  // Low-Poly Golden Crescent Moon Weather Vane
   const crescentGroup = new THREE.Group();
-  crescentGroup.position.y = turretH + 1.65;
+  crescentGroup.position.set(0, belfryBaseY + belfryH + 1.78, 0);
 
-  const moonCurve = new THREE.TorusGeometry(0.18, 0.045, 4, 12, Math.PI * 1.35);
+  const moonCurve = new THREE.TorusGeometry(0.19, 0.045, 4, 12, Math.PI * 1.35);
   const moonMesh = new THREE.Mesh(moonCurve, mats.goldBrass);
   moonMesh.rotation.z = Math.PI * 0.35;
   crescentGroup.add(moonMesh);
 
-  turretBody.add(crescentGroup);
-  cottage.add(turretBody);
+  cottage.add(crescentGroup);
 
-  // Cozy Cottage Interior Light
-  const cottageLight = new THREE.PointLight(0xffbe44, 1.5, 6.0, 1.2);
-  cottageLight.position.set(0, 1.8, 0.5);
-  cottage.add(cottageLight);
+  // Lower interior light for ground floor
+  const lowerCottageLight = new THREE.PointLight(0xffbe44, 1.2, 5.0, 1.2);
+  lowerCottageLight.position.set(0, 0.9, 0.3);
+  cottage.add(lowerCottageLight);
 
   rightIslandGroup.add(cottage);
 
@@ -522,7 +545,6 @@ export function createSatelliteIslands(scene) {
   }
 
   // Chain of Levitating Floating Stepping Stones (Connecting Main Island to Right Island)
-  // Curves across the clouds from (5.8, -0.2, -2.2) to (8.8, -0.5, -3.8)
   const steppingStonesGroup = new THREE.Group();
   steppingStonesGroup.name = 'levitatingSteppingStones';
 
@@ -533,7 +555,6 @@ export function createSatelliteIslands(scene) {
 
   for (let i = 0; i <= stoneCount; i++) {
     const t = i / stoneCount;
-    // Gentle floating arc
     const arcY = Math.sin(t * Math.PI) * 0.25;
     const sx = THREE.MathUtils.lerp(startX, targetX, t) + (Math.sin(t * Math.PI) * 0.4);
     const sy = THREE.MathUtils.lerp(startY, targetY, t) + arcY;
@@ -560,6 +581,35 @@ export function createSatelliteIslands(scene) {
   // Apply shadow casting and receiving across all archipelago objects
   applyShadows(masterGroup);
 
+  // Time-of-Day theme listener for dynamic night lighting
+  let targetTopHouseLight = 1.8;
+  let targetLowerLight = 1.2;
+  let targetPumpkinLight = 1.4;
+
+  function setTheme(theme) {
+    if (theme === 'night') {
+      // Brilliant beacon in the night sky!
+      targetTopHouseLight = 3.2;
+      targetLowerLight = 2.2;
+      targetPumpkinLight = 2.4;
+      mats.windowGlow.emissiveIntensity = 2.6;
+      mats.pumpkinGlow.emissiveIntensity = 2.8;
+    } else if (theme === 'sunset') {
+      targetTopHouseLight = 1.8;
+      targetLowerLight = 1.2;
+      targetPumpkinLight = 1.4;
+      mats.windowGlow.emissiveIntensity = 1.8;
+      mats.pumpkinGlow.emissiveIntensity = 2.2;
+    } else {
+      // Day
+      targetTopHouseLight = 0.6;
+      targetLowerLight = 0.5;
+      targetPumpkinLight = 0.5;
+      mats.windowGlow.emissiveIntensity = 1.0;
+      mats.pumpkinGlow.emissiveIntensity = 1.2;
+    }
+  }
+
   // Animation Update
   function update(time, dt) {
     // 1. Organic, out-of-phase levitation bobbing for both satellite islands
@@ -583,19 +633,17 @@ export function createSatelliteIslands(scene) {
     // 4. Crescent Moon Weather Vane gentle breeze swivel
     crescentGroup.rotation.y = Math.sin(time * 0.6) * 0.25;
 
-    // 5. Flittering bats wing flapping and subtle hover
-    bats.forEach(b => {
-      b.group.position.y = b.baseY + Math.sin(time * 2.5 + b.phase) * 0.08;
-      const flap = Math.sin(time * 9.0 + b.phase) * 0.45;
-      b.wingL.rotation.z = flap;
-      b.wingR.rotation.z = -flap;
-    });
+    // 5. Smoothly interpolate lighting intensities
+    topHouseLight.intensity += (targetTopHouseLight - topHouseLight.intensity) * 0.08;
+    lowerCottageLight.intensity += (targetLowerLight - lowerCottageLight.intensity) * 0.08;
+    pumpkinLight.intensity += (targetPumpkinLight - pumpkinLight.intensity) * 0.08;
   }
 
   return {
     group: masterGroup,
     leftIsland: leftIslandGroup,
     rightIsland: rightIslandGroup,
+    setTheme,
     update
   };
 }

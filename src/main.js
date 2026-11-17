@@ -39,6 +39,7 @@ const audio = createSynthAudio();
 // Initialize lighting & celestial to default Sunset atmosphere
 lighting.applyPreset('sunset');
 celestial.setTheme('sunset');
+satelliteIslands.setTheme('sunset');
 
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
@@ -250,6 +251,7 @@ themeBtns.forEach((btn) => {
     // Update 3D Lighting preset
     lighting.applyPreset(theme);
     celestial.setTheme(theme);
+    satelliteIslands.setTheme(theme);
 
     // Update cloud materials based on atmosphere
     if (theme === 'night') {
