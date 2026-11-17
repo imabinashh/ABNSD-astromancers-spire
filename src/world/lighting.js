@@ -62,19 +62,19 @@ export function createLighting(scene) {
       bgBottom: '#e6c8b4'
     },
     night: {
-      sunColor: 0x687cb0,
-      sunIntensity: 0.7,
-      sunPosition: [-12, 22, -10],
-      ambientColor: 0x222a48,
-      ambientIntensity: 0.6,
-      hemiSky: 0x303b60,
-      hemiGround: 0x141824,
-      cauldronIntensity: 4.0,
-      windowIntensity: 3.5,
-      fogColor: 0x141829,
-      fogDensity: 0.015,
-      bgTop: '#0b0e1b',
-      bgBottom: '#222842'
+      sunColor: 0xb5d4ff,
+      sunIntensity: 2.2,
+      sunPosition: [-15, 27, -13],
+      ambientColor: 0x364875,
+      ambientIntensity: 0.95,
+      hemiSky: 0x485f94,
+      hemiGround: 0x20283c,
+      cauldronIntensity: 4.8,
+      windowIntensity: 4.2,
+      fogColor: 0x0f1424,
+      fogDensity: 0.007,
+      bgTop: '#090d1a',
+      bgBottom: '#1c2540'
     },
     day: {
       sunColor: 0xfffaea,

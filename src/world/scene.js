@@ -89,28 +89,6 @@ export function createScene(canvas) {
   }
   scene.add(cloudGroup);
 
-  // 6. Distant Twinkling Stars (visible in night / dusk)
-  const starGeo = new THREE.BufferGeometry();
-  const starCount = 300;
-  const starPositions = new Float32Array(starCount * 3);
-  for (let i = 0; i < starCount; i++) {
-    const r = 70 + Math.random() * 30;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(Math.random() * 0.9); // upper hemisphere
-    starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-    starPositions[i * 3 + 1] = r * Math.cos(phi) + 5;
-    starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
-  }
-  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-  const starMat = new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.7,
-    transparent: true,
-    opacity: 0.45
-  });
-  const starPoints = new THREE.Points(starGeo, starMat);
-  scene.add(starPoints);
-
   // Resize handler
   function onResize() {
     const w = window.innerWidth;
@@ -129,9 +107,6 @@ export function createScene(canvas) {
       c.group.position.x = Math.sin(c.angle) * c.dist;
       c.group.position.z = Math.cos(c.angle) * c.dist;
     });
-
-    // Twinkle stars
-    starMat.opacity = 0.35 + Math.sin(time * 2.0) * 0.15;
   }
 
   return {
@@ -139,7 +114,6 @@ export function createScene(canvas) {
     camera,
     renderer,
     controls,
-    starMat,
     cloudMat,
     onResize,
     update

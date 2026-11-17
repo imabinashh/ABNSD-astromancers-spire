@@ -7,6 +7,7 @@ import { createCameraTrack } from './world/cameraTrack.js';
 import { createScrollConductor } from './conductor/scrollConductor.js';
 import { createSynthAudio } from './audio/synthAudio.js';
 import { createClouds } from './world/clouds.js';
+import { createCelestial } from './world/celestial.js';
 
 // DOM Elements
 const canvas = document.getElementById('webgl');
@@ -29,6 +30,7 @@ scene.add(tower.group);
 
 const particles = createParticles(scene, tower.chimneyOrigin, tower.cauldronOrigin);
 const clouds = createClouds(scene);
+const celestial = createCelestial(scene);
 const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
@@ -241,6 +243,7 @@ themeBtns.forEach((btn) => {
 
     // Update 3D Lighting preset
     lighting.applyPreset(theme);
+    celestial.setTheme(theme);
 
     // Update cloud materials based on atmosphere
     if (theme === 'night') {
@@ -323,6 +326,9 @@ function animate(currentTime) {
 
   // Update island and camera foreground clouds
   clouds.update(dt, time);
+
+  // Update Moon, rich starfield, and shooting stars
+  celestial.update(dt, time);
 
   // Update background clouds & twinkling stars
   updateScene(dt, time);
