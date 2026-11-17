@@ -21,13 +21,6 @@ const toggleOrbitBtn = document.getElementById('toggle-orbit-btn');
 const audioToggleBtn = document.getElementById('audio-toggle-btn');
 const exploreFreelyBtn = document.getElementById('explore-freely-btn');
 
-// Hotspot popup elements
-const hotspotPopup = document.getElementById('hotspot-popup');
-const hotspotTitle = document.getElementById('hotspot-title');
-const hotspotDesc = document.getElementById('hotspot-desc');
-const hotspotAction = document.getElementById('hotspot-action');
-const hotspotClose = document.getElementById('hotspot-close');
-
 // 1. Initialize 3D World Core
 const { scene, camera, renderer, controls, update: updateScene } = createScene(canvas);
 const lighting = createLighting(scene);
@@ -276,26 +269,9 @@ audioToggleBtn.addEventListener('click', () => {
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
-function showHotspot(title, desc, hasAction = false, actionLabel = 'Action', onAction = null) {
-  hotspotTitle.textContent = title;
-  hotspotDesc.textContent = desc;
-  if (hasAction && onAction) {
-    hotspotAction.textContent = actionLabel;
-    hotspotAction.classList.remove('hidden');
-    hotspotAction.onclick = onAction;
-  } else {
-    hotspotAction.classList.add('hidden');
-  }
-  hotspotPopup.classList.remove('hidden');
-}
-
-hotspotClose.addEventListener('click', () => {
-  hotspotPopup.classList.add('hidden');
-});
-
-// Click / Tap interaction on 3D elements (works on both mobile touch and desktop)
+// Click / Tap interaction on 3D elements (pure visual/audio feedback, zero popups)
 window.addEventListener('click', (event) => {
-  if (event.target.closest('.site-header') || event.target.closest('.hotspot-popup')) return;
+  if (event.target.closest('.site-header')) return;
   conductor.resetIdle();
 
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -315,40 +291,11 @@ window.addEventListener('click', (event) => {
     const name = namedParent ? namedParent.name : '';
 
     if (name === 'cauldron' || hit.material === tower.materials.potionGlow) {
-      // Cauldron clicked!
+      // Cauldron burst on click!
       particles.triggerCauldronBurst();
       audio.playBubble();
-      showHotspot(
-        "Alchemist's Cauldron",
-        "A heavy iron kettle bubbling with the Elixir of Levitation. Click below to channel arcane energy!",
-        true,
-        '✨ Brew Potion Burst',
-        () => {
-          particles.triggerCauldronBurst();
-          audio.playBubble();
-        }
-      );
-    } else if (name === 'telescope') {
+    } else if (name === 'telescope' || name === 'wizardRoof' || name === 'chimney') {
       audio.playChime();
-      showHotspot(
-        "Astronomer's Refractor",
-        "A brass telescope with crystalline ground lenses, calibrated to track wandering celestial bodies and stellar rifts.",
-        false
-      );
-    } else if (name === 'wizardRoof') {
-      audio.playChime();
-      showHotspot(
-        "Crooked Wizard Spire",
-        "Crafted with enchanted slate shingles that bend towards the northern leylines. Notice the curling tip and warm dormer window.",
-        false
-      );
-    } else if (name === 'chimney') {
-      audio.playChime();
-      showHotspot(
-        "Hearth Chimney",
-        "Burning enchanted cedar and dried star-blossoms, sending fragrant low-poly puffs drifting into the heavens.",
-        false
-      );
     }
   }
 });
