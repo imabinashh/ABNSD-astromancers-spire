@@ -219,16 +219,32 @@ conductor.start();
 window.addEventListener('wheel', (e) => {
   if (waypointMode && Math.abs(e.deltaY) > 8) {
     waypointMode = false;
-    showToast('🔭 Guided Scroll Resumed');
+    showToast('Guided Scroll Resumed');
   }
 }, { passive: true });
 
 window.addEventListener('touchmove', () => {
   if (waypointMode) {
     waypointMode = false;
-    showToast('🔭 Guided Scroll Resumed');
+    showToast('Guided Scroll Resumed');
   }
 }, { passive: true });
+
+function updateCameraBtnText(isOrbit) {
+  if (!cameraOrbitBtn) return;
+  const textEl = cameraOrbitBtn.querySelector('.camera-btn-text');
+  if (!textEl) return;
+  const isMobile = window.innerWidth <= 640;
+  if (isOrbit) {
+    textEl.textContent = isMobile ? 'Scroll' : 'Guided Scroll';
+  } else {
+    textEl.textContent = isMobile ? 'Orbit' : 'Free Orbit';
+  }
+}
+
+window.addEventListener('resize', () => {
+  updateCameraBtnText(controls.enabled);
+});
 
 // 3. Free Orbit Mode Toggle
 function enableFreeOrbit() {
@@ -241,8 +257,7 @@ function enableFreeOrbit() {
   }
   if (cameraOrbitBtn) {
     cameraOrbitBtn.classList.add('active');
-    const textEl = cameraOrbitBtn.querySelector('.camera-btn-text');
-    if (textEl) textEl.textContent = 'Guided Scroll';
+    updateCameraBtnText(true);
   }
   if (menuOrbitBtn) {
     menuOrbitBtn.textContent = 'Guided Scroll';
@@ -259,8 +274,7 @@ function disableFreeOrbit() {
   }
   if (cameraOrbitBtn) {
     cameraOrbitBtn.classList.remove('active');
-    const textEl = cameraOrbitBtn.querySelector('.camera-btn-text');
-    if (textEl) textEl.textContent = 'Free Orbit';
+    updateCameraBtnText(false);
   }
   if (menuOrbitBtn) {
     menuOrbitBtn.textContent = 'Free Orbit';
@@ -277,10 +291,10 @@ if (cameraOrbitBtn) {
 function toggleFreeOrbit() {
   if (controls.enabled) {
     disableFreeOrbit();
-    showToast('🔭 Guided Scroll Active');
+    showToast('Guided Scroll Active');
   } else {
     enableFreeOrbit();
-    showToast('🌐 Free Orbit Active • Drag to inspect in 360°');
+    showToast('Free Orbit Active • Drag to inspect 360°');
   }
 }
 
@@ -314,7 +328,7 @@ function resetCameraView() {
     new THREE.Vector3(18.5, 14.8, 23.5),
     new THREE.Vector3(0, 5.8, 0),
     42,
-    '✦ Full Archipelago View Reset',
+    'Full Archipelago View Reset',
     'sanctuary'
   );
   conductor.setProgress(0.0, false);
@@ -382,7 +396,7 @@ menuPillBtns.forEach(btn => {
         new THREE.Vector3(18.5, 14.8, 23.5),
         new THREE.Vector3(0, 5.8, 0),
         42,
-        '✦ The Sanctuary • Full Archipelago View',
+        'The Sanctuary • Full Archipelago View',
         'sanctuary'
       );
       conductor.setProgress(0.0, false);
@@ -393,7 +407,7 @@ menuPillBtns.forEach(btn => {
         new THREE.Vector3(-6.2, 3.8, 14.2),
         new THREE.Vector3(-11.5, 0.8, 5.0),
         40,
-        '🎃 Pumpkin Grove • The Alchemist\'s Garden',
+        'Pumpkin Grove • The Alchemist\'s Garden',
         'pumpkin'
       );
       audio.playBubble();
@@ -402,7 +416,7 @@ menuPillBtns.forEach(btn => {
         new THREE.Vector3(17.8, 4.2, 5.2),
         new THREE.Vector3(11.5, 1.4, -4.5),
         38,
-        '🌙 Cottage Outpost • The Apprentice\'s Watch',
+        'Cottage Outpost • The Apprentice\'s Watch',
         'cottage'
       );
       audio.playChime();
@@ -451,15 +465,15 @@ themeBtns.forEach((btn) => {
     if (theme === 'night') {
       clouds.cloudMaterial.color.setHex(0x28324a);
       clouds.cloudMatWarm.color.setHex(0x354060);
-      showToast('🌙 Midnight Leylines Activated');
+      showToast('Midnight Leylines Activated');
     } else if (theme === 'sunset') {
       clouds.cloudMaterial.color.setHex(0xfbf8f4);
       clouds.cloudMatWarm.color.setHex(0xffe8d6);
-      showToast('🌅 Golden Sunset Hour');
+      showToast('Golden Sunset Hour');
     } else {
       clouds.cloudMaterial.color.setHex(0xffffff);
       clouds.cloudMatWarm.color.setHex(0xf2f7ff);
-      showToast('☀️ Radiant High Daylight');
+      showToast('Radiant Daylight Activated');
     }
 
     audio.playChime();
@@ -475,12 +489,12 @@ if (audioToggleBtn) {
         soundIconOn.classList.remove('hidden');
         soundIconOff.classList.add('hidden');
         audioToggleBtn.classList.add('active');
-        showToast('🔊 Ambient Soundscape On');
+        showToast('Ambient Soundscape Active');
       } else {
         soundIconOn.classList.add('hidden');
         soundIconOff.classList.remove('hidden');
         audioToggleBtn.classList.remove('active');
-        showToast('🔇 Ambient Soundscape Muted');
+        showToast('Ambient Soundscape Muted');
       }
     }
   });
@@ -520,7 +534,7 @@ window.addEventListener('click', (event) => {
     if (name === 'cauldron' || hit.material === tower.materials.potionGlow) {
       particles.triggerCauldronBurst();
       audio.playBubble();
-      showToast('✨ Cauldron Elixir Bubbles!');
+      showToast('Cauldron Elixir Bubbles');
     } else if (name === 'telescope' || name === 'wizardRoof' || name === 'chimney') {
       audio.playChime();
     }

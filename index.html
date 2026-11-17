@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>The Astromancer's Spire — Low Poly 3D Journey</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
@@ -159,6 +159,8 @@
 
   <!-- FLOATING CAMERA CONTROLS HUD (Active during Free Orbit) -->
   <div id="camera-controls-hud" class="camera-controls-hud hidden" aria-label="Camera Orbit Controls">
+    <div class="hud-hint-text">Drag to rotate 360° • Scroll / Pinch to zoom</div>
+
     <div class="hud-pill-group">
       <button id="cam-reset-btn" class="hud-btn" title="Reset Camera View" aria-label="Reset Camera View">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -196,10 +198,6 @@
           <path d="M21.5 2v6h-6M22 11.5a10 10 0 1 0-3.5 6.5"/>
         </svg>
       </button>
-    </div>
-
-    <div class="hud-hint-pill">
-      <span>🖱️ Drag to rotate 360° • Scroll / Pinch to zoom</span>
     </div>
   </div>
 
