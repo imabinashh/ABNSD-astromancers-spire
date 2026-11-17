@@ -99,14 +99,13 @@ const waypointCamPos = new THREE.Vector3();
 const waypointTarget = new THREE.Vector3();
 let waypointFov = 42;
 let toastTimeout = null;
+const _camOffset = new THREE.Vector3();
 
 // Adaptive FOV for mobile portrait screens (prevents horizontal cropping)
 function getAdaptiveFOV(baseFov, aspect) {
   if (aspect >= 1.0) return baseFov;
-  const targetHFOV = 64 * (Math.PI / 180);
-  const vFovRad = 2 * Math.atan(Math.tan(targetHFOV / 2) / aspect);
-  const vFovDeg = vFovRad * (180 / Math.PI);
-  return Math.min(64, Math.max(baseFov, vFovDeg * 0.78));
+  const t = Math.max(0, Math.min(1, (1.0 - aspect) / 0.6));
+  return baseFov + t * 16;
 }
 
 // Mouse parallax tracking (only for pointer devices)
@@ -193,7 +192,14 @@ const conductor = createScrollConductor({
       mouse.x += (mouse.targetX - mouse.x) * 0.05;
       mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
-      camera.position.copy(blendedCamPos);
+      if (camera.aspect < 1.0) {
+        const pullback = 1.0 + (1.0 - camera.aspect) * 0.65;
+        _camOffset.subVectors(blendedCamPos, blendedCamTarget).multiplyScalar(pullback);
+        camera.position.addVectors(blendedCamTarget, _camOffset);
+      } else {
+        camera.position.copy(blendedCamPos);
+      }
+
       if (idleWeight < 0.95) {
         const pFactor = 1 - idleWeight;
         camera.position.x += mouse.x * 0.35 * pFactor;
@@ -601,7 +607,13 @@ function animate(currentTime) {
     mouse.x += (mouse.targetX - mouse.x) * 0.05;
     mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
-    camera.position.copy(currentCamPos);
+    if (camera.aspect < 1.0 && activeWaypointId === 'sanctuary') {
+      const pullback = 1.0 + (1.0 - camera.aspect) * 0.65;
+      _camOffset.subVectors(currentCamPos, currentCamTarget).multiplyScalar(pullback);
+      camera.position.addVectors(currentCamTarget, _camOffset);
+    } else {
+      camera.position.copy(currentCamPos);
+    }
     camera.position.x += mouse.x * 0.22;
     camera.position.y += -mouse.y * 0.16;
 
