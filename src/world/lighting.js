@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap';
 
 export function createLighting(scene) {
   // Main directional light (Sun / Moon)
@@ -99,40 +100,86 @@ export function createLighting(scene) {
 
   let currentPreset = 'sunset';
 
-  function applyPreset(presetName, duration = 0.8) {
+  const baseIntensities = {
+    cauldron: presets.sunset.cauldronIntensity,
+    window: presets.sunset.windowIntensity
+  };
+
+  function applyPreset(presetName, duration = 1.2) {
     const p = presets[presetName] || presets.sunset;
     currentPreset = presetName;
 
-    sunLight.color.setHex(p.sunColor);
-    sunLight.intensity = p.sunIntensity;
-    sunLight.position.set(...p.sunPosition);
+    if (duration <= 0) {
+      sunLight.color.setHex(p.sunColor);
+      sunLight.intensity = p.sunIntensity;
+      sunLight.position.set(...p.sunPosition);
 
-    ambientLight.color.setHex(p.ambientColor);
-    ambientLight.intensity = p.ambientIntensity;
+      ambientLight.color.setHex(p.ambientColor);
+      ambientLight.intensity = p.ambientIntensity;
 
-    hemiLight.color.setHex(p.hemiSky);
-    hemiLight.groundColor.setHex(p.hemiGround);
-    hemiLight.intensity = p.hemiIntensity || 0.7;
+      hemiLight.color.setHex(p.hemiSky);
+      hemiLight.groundColor.setHex(p.hemiGround);
+      hemiLight.intensity = p.hemiIntensity || 0.7;
 
-    cauldronLight.intensity = p.cauldronIntensity;
-    upperRoomLight.intensity = p.windowIntensity;
-    midWindowLight.intensity = p.windowIntensity * 0.7;
-    dormerLight.intensity = p.windowIntensity * 0.6;
+      baseIntensities.cauldron = p.cauldronIntensity;
+      baseIntensities.window = p.windowIntensity;
+
+      cauldronLight.intensity = p.cauldronIntensity;
+      upperRoomLight.intensity = p.windowIntensity;
+      midWindowLight.intensity = p.windowIntensity * 0.7;
+      dormerLight.intensity = p.windowIntensity * 0.6;
+
+      if (scene.fog) {
+        scene.fog.color.setHex(p.fogColor);
+        scene.fog.density = p.fogDensity;
+      }
+      return p;
+    }
+
+    // Smooth GSAP tweens for cinematic atmosphere shift
+    const targetSunCol = new THREE.Color(p.sunColor);
+    const targetAmbCol = new THREE.Color(p.ambientColor);
+    const targetHemiSky = new THREE.Color(p.hemiSky);
+    const targetHemiGnd = new THREE.Color(p.hemiGround);
+
+    gsap.killTweensOf([sunLight, sunLight.color, sunLight.position, ambientLight, ambientLight.color, hemiLight, hemiLight.color, hemiLight.groundColor, baseIntensities]);
+
+    gsap.to(sunLight.color, { r: targetSunCol.r, g: targetSunCol.g, b: targetSunCol.b, duration, ease: 'power2.inOut' });
+    gsap.to(sunLight, { intensity: p.sunIntensity, duration, ease: 'power2.inOut' });
+    gsap.to(sunLight.position, { x: p.sunPosition[0], y: p.sunPosition[1], z: p.sunPosition[2], duration, ease: 'power2.inOut' });
+
+    gsap.to(ambientLight.color, { r: targetAmbCol.r, g: targetAmbCol.g, b: targetAmbCol.b, duration, ease: 'power2.inOut' });
+    gsap.to(ambientLight, { intensity: p.ambientIntensity, duration, ease: 'power2.inOut' });
+
+    gsap.to(hemiLight.color, { r: targetHemiSky.r, g: targetHemiSky.g, b: targetHemiSky.b, duration, ease: 'power2.inOut' });
+    gsap.to(hemiLight.groundColor, { r: targetHemiGnd.r, g: targetHemiGnd.g, b: targetHemiGnd.b, duration, ease: 'power2.inOut' });
+    gsap.to(hemiLight, { intensity: p.hemiIntensity || 0.7, duration, ease: 'power2.inOut' });
+
+    gsap.to(baseIntensities, {
+      cauldron: p.cauldronIntensity,
+      window: p.windowIntensity,
+      duration,
+      ease: 'power2.inOut'
+    });
 
     if (scene.fog) {
-      scene.fog.color.setHex(p.fogColor);
-      scene.fog.density = p.fogDensity;
+      const targetFogCol = new THREE.Color(p.fogColor);
+      gsap.killTweensOf([scene.fog, scene.fog.color]);
+      gsap.to(scene.fog.color, { r: targetFogCol.r, g: targetFogCol.g, b: targetFogCol.b, duration, ease: 'power2.inOut' });
+      gsap.to(scene.fog, { density: p.fogDensity, duration, ease: 'power2.inOut' });
     }
 
     return p;
   }
 
-  // Update flickering window / cauldron lights
+  // Update flickering window / cauldron lights on top of base intensities
   function update(time) {
     const flicker1 = Math.sin(time * 3.5) * 0.15 + Math.cos(time * 7.1) * 0.08;
     const flicker2 = Math.sin(time * 5.2) * 0.2 + Math.cos(time * 11.0) * 0.1;
-    cauldronLight.intensity = Math.max(0.8, presets[currentPreset].cauldronIntensity + flicker2);
-    upperRoomLight.intensity = Math.max(0.8, presets[currentPreset].windowIntensity + flicker1);
+    cauldronLight.intensity = Math.max(0.8, baseIntensities.cauldron + flicker2);
+    upperRoomLight.intensity = Math.max(0.8, baseIntensities.window + flicker1);
+    midWindowLight.intensity = baseIntensities.window * 0.7;
+    dormerLight.intensity = baseIntensities.window * 0.6;
   }
 
   return {

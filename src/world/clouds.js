@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap';
 
 // Low-poly cloud builder: creates a cinematic frame where the tower is visible THROUGH the clouds
 export function createClouds(scene) {
@@ -164,45 +165,75 @@ export function createClouds(scene) {
     });
   }
 
-  function setTheme(theme) {
+  function setTheme(theme, duration = 1.2) {
+    let targetCol1, targetEm1, targetEmInt1, targetSheenCol1, targetSheen1;
+    let targetCol2, targetEm2, targetEmInt2, targetSheenCol2, targetSheen2;
+
     if (theme === 'night') {
-      // Subtle blue-indigo emissive rim (#1a2442) so low-poly faceted shapes remain crisp and readable at night
-      cloudMaterial.color.setHex(0x28385a);
-      cloudMaterial.emissive.setHex(0x1a2442);
-      cloudMaterial.emissiveIntensity = 0.92;
-      cloudMaterial.sheenColor.setHex(0x789ad8); // pale blue sheen at night
-      cloudMaterial.sheen = 0.72;
+      targetCol1 = new THREE.Color(0x28385a);
+      targetEm1 = new THREE.Color(0x1a2442);
+      targetEmInt1 = 0.92;
+      targetSheenCol1 = new THREE.Color(0x789ad8);
+      targetSheen1 = 0.72;
 
-      cloudMatWarm.color.setHex(0x32446e);
-      cloudMatWarm.emissive.setHex(0x1a2442);
-      cloudMatWarm.emissiveIntensity = 1.0;
-      cloudMatWarm.sheenColor.setHex(0x789ad8);
-      cloudMatWarm.sheen = 0.78;
+      targetCol2 = new THREE.Color(0x32446e);
+      targetEm2 = new THREE.Color(0x1a2442);
+      targetEmInt2 = 1.0;
+      targetSheenCol2 = new THREE.Color(0x789ad8);
+      targetSheen2 = 0.78;
     } else if (theme === 'sunset') {
-      cloudMaterial.color.setHex(0xfbf8f4);
-      cloudMaterial.emissive.setHex(0x000000);
-      cloudMaterial.emissiveIntensity = 0.0;
-      cloudMaterial.sheenColor.setHex(0xffcbab); // pinkish-orange sheen at sunset
-      cloudMaterial.sheen = 0.65;
+      targetCol1 = new THREE.Color(0xfbf8f4);
+      targetEm1 = new THREE.Color(0x000000);
+      targetEmInt1 = 0.0;
+      targetSheenCol1 = new THREE.Color(0xffcbab);
+      targetSheen1 = 0.65;
 
-      cloudMatWarm.color.setHex(0xffe8d6);
-      cloudMatWarm.emissive.setHex(0x000000);
-      cloudMatWarm.emissiveIntensity = 0.0;
-      cloudMatWarm.sheenColor.setHex(0xffcbab);
-      cloudMatWarm.sheen = 0.7;
+      targetCol2 = new THREE.Color(0xffe8d6);
+      targetEm2 = new THREE.Color(0x000000);
+      targetEmInt2 = 0.0;
+      targetSheenCol2 = new THREE.Color(0xffcbab);
+      targetSheen2 = 0.7;
     } else {
-      cloudMaterial.color.setHex(0xffffff);
-      cloudMaterial.emissive.setHex(0x000000);
-      cloudMaterial.emissiveIntensity = 0.0;
-      cloudMaterial.sheenColor.setHex(0xfff8f0); // soft warm-white sheen at daylight
-      cloudMaterial.sheen = 0.55;
+      targetCol1 = new THREE.Color(0xffffff);
+      targetEm1 = new THREE.Color(0x000000);
+      targetEmInt1 = 0.0;
+      targetSheenCol1 = new THREE.Color(0xfff8f0);
+      targetSheen1 = 0.55;
 
-      cloudMatWarm.color.setHex(0xf2f7ff);
-      cloudMatWarm.emissive.setHex(0x000000);
-      cloudMatWarm.emissiveIntensity = 0.0;
-      cloudMatWarm.sheenColor.setHex(0xfff8f0);
-      cloudMatWarm.sheen = 0.6;
+      targetCol2 = new THREE.Color(0xf2f7ff);
+      targetEm2 = new THREE.Color(0x000000);
+      targetEmInt2 = 0.0;
+      targetSheenCol2 = new THREE.Color(0xfff8f0);
+      targetSheen2 = 0.6;
     }
+
+    if (duration <= 0) {
+      cloudMaterial.color.copy(targetCol1);
+      cloudMaterial.emissive.copy(targetEm1);
+      cloudMaterial.emissiveIntensity = targetEmInt1;
+      cloudMaterial.sheenColor.copy(targetSheenCol1);
+      cloudMaterial.sheen = targetSheen1;
+
+      cloudMatWarm.color.copy(targetCol2);
+      cloudMatWarm.emissive.copy(targetEm2);
+      cloudMatWarm.emissiveIntensity = targetEmInt2;
+      cloudMatWarm.sheenColor.copy(targetSheenCol2);
+      cloudMatWarm.sheen = targetSheen2;
+      return;
+    }
+
+    gsap.killTweensOf([cloudMaterial, cloudMaterial.color, cloudMaterial.emissive, cloudMaterial.sheenColor,
+                       cloudMatWarm, cloudMatWarm.color, cloudMatWarm.emissive, cloudMatWarm.sheenColor]);
+
+    gsap.to(cloudMaterial.color, { r: targetCol1.r, g: targetCol1.g, b: targetCol1.b, duration, ease: "power2.inOut" });
+    gsap.to(cloudMaterial.emissive, { r: targetEm1.r, g: targetEm1.g, b: targetEm1.b, duration, ease: "power2.inOut" });
+    gsap.to(cloudMaterial, { emissiveIntensity: targetEmInt1, sheen: targetSheen1, duration, ease: "power2.inOut" });
+    gsap.to(cloudMaterial.sheenColor, { r: targetSheenCol1.r, g: targetSheenCol1.g, b: targetSheenCol1.b, duration, ease: "power2.inOut" });
+
+    gsap.to(cloudMatWarm.color, { r: targetCol2.r, g: targetCol2.g, b: targetCol2.b, duration, ease: "power2.inOut" });
+    gsap.to(cloudMatWarm.emissive, { r: targetEm2.r, g: targetEm2.g, b: targetEm2.b, duration, ease: "power2.inOut" });
+    gsap.to(cloudMatWarm, { emissiveIntensity: targetEmInt2, sheen: targetSheen2, duration, ease: "power2.inOut" });
+    gsap.to(cloudMatWarm.sheenColor, { r: targetSheenCol2.r, g: targetSheenCol2.g, b: targetSheenCol2.b, duration, ease: "power2.inOut" });
   }
 
   return {

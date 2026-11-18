@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap';
 import { createScene } from './world/scene.js';
 import { createLighting } from './world/lighting.js';
 import { createTowerModel } from './world/towerModel.js';
@@ -56,10 +57,10 @@ const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
 // Initialize lighting, celestial & archipelago to default Sunset atmosphere
-lighting.applyPreset('sunset');
+lighting.applyPreset('sunset', 0);
 celestial.setTheme('sunset');
 satelliteIslands.setTheme('sunset');
-clouds.setTheme('sunset');
+clouds.setTheme('sunset', 0);
 
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
@@ -118,22 +119,50 @@ if (window.matchMedia('(pointer: fine)').matches) {
   });
 }
 
-// Toast Helper (Cardless floating text at top center)
+// GSAP Flight Tween Handles
+let camPosTween = null;
+let camTargetTween = null;
+let fovTween = null;
+let isFlightActive = false;
+
+function stopFlightTweens() {
+  if (camPosTween) { camPosTween.kill(); camPosTween = null; }
+  if (camTargetTween) { camTargetTween.kill(); camTargetTween = null; }
+  if (fovTween) { fovTween.kill(); fovTween = null; }
+  isFlightActive = false;
+}
+
+// Toast Helper (Cardless floating text at top center with silky GSAP fade & slide)
 function showToast(text) {
   if (!landmarkToast) return;
   landmarkToast.textContent = text;
   landmarkToast.classList.remove('hidden');
   clearTimeout(toastTimeout);
+  gsap.killTweensOf(landmarkToast);
+  gsap.fromTo(landmarkToast,
+    { opacity: 0, y: -8 },
+    { opacity: 1, y: 0, duration: 0.32, ease: "power2.out" }
+  );
   toastTimeout = setTimeout(() => {
-    landmarkToast.classList.add('hidden');
+    gsap.to(landmarkToast, {
+      opacity: 0,
+      y: -6,
+      duration: 0.35,
+      ease: "power2.in",
+      onComplete: () => {
+        landmarkToast.classList.add('hidden');
+      }
+    });
   }, 3200);
 }
 
-// Fly smoothly to landmark
+// Fly smoothly to landmark with GSAP cubic power2.inOut easing
 function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark') {
   if (controls.enabled) {
     disableFreeOrbit();
   }
+  stopFlightTweens();
+
   waypointMode = true;
   activeWaypointId = waypointId;
   waypointCamPos.copy(camPos);
@@ -144,6 +173,35 @@ function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark
   resetUserIdle();
   conductor.resetIdle();
   showToast(toastText);
+
+  isFlightActive = true;
+  camPosTween = gsap.to(currentCamPos, {
+    x: camPos.x,
+    y: camPos.y,
+    z: camPos.z,
+    duration: 1.4,
+    ease: "power2.inOut",
+    onComplete: () => {
+      isFlightActive = false;
+    }
+  });
+
+  camTargetTween = gsap.to(currentCamTarget, {
+    x: targetPos.x,
+    y: targetPos.y,
+    z: targetPos.z,
+    duration: 1.4,
+    ease: "power2.inOut"
+  });
+
+  const adaptiveFov = getAdaptiveFOV(fov, camera.aspect);
+  targetFov = adaptiveFov;
+  fovTween = gsap.to(camera, {
+    fov: adaptiveFov,
+    duration: 1.4,
+    ease: "power2.inOut",
+    onUpdate: () => camera.updateProjectionMatrix()
+  });
 }
 
 // 2. Initialize Scroll Conductor
@@ -225,6 +283,7 @@ conductor.start();
 // Exit landmark waypoint view when viewer physically scrolls or swipes
 window.addEventListener('wheel', (e) => {
   if (waypointMode && Math.abs(e.deltaY) > 8) {
+    stopFlightTweens();
     waypointMode = false;
     showToast('Guided Scroll Resumed');
   }
@@ -232,6 +291,7 @@ window.addEventListener('wheel', (e) => {
 
 window.addEventListener('touchmove', () => {
   if (waypointMode) {
+    stopFlightTweens();
     waypointMode = false;
     showToast('Guided Scroll Resumed');
   }
@@ -255,6 +315,7 @@ window.addEventListener('resize', () => {
 
 // 3. Free Orbit Mode Toggle
 function enableFreeOrbit() {
+  stopFlightTweens();
   controls.enabled = true;
   conductor.setManualOverride(true);
   controls.target.copy(currentCamTarget);
@@ -273,6 +334,7 @@ function enableFreeOrbit() {
 }
 
 function disableFreeOrbit() {
+  stopFlightTweens();
   controls.enabled = false;
   conductor.setManualOverride(false);
   document.body.classList.remove('mode-free-orbit');
@@ -305,26 +367,46 @@ function toggleFreeOrbit() {
   }
 }
 
-// Camera HUD Controls
+// Camera HUD Controls with silky GSAP easing
 function zoomCamera(factor) {
   if (!controls.enabled) enableFreeOrbit();
+  resetUserIdle();
   conductor.resetIdle();
   const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
-  offset.multiplyScalar(factor);
-  const dist = offset.length();
+  const targetOffset = offset.clone().multiplyScalar(factor);
+  const dist = targetOffset.length();
   if (dist >= controls.minDistance && dist <= controls.maxDistance) {
-    camera.position.addVectors(controls.target, offset);
-    controls.update();
+    const targetX = controls.target.x + targetOffset.x;
+    const targetY = controls.target.y + targetOffset.y;
+    const targetZ = controls.target.z + targetOffset.z;
+    gsap.to(camera.position, {
+      x: targetX,
+      y: targetY,
+      z: targetZ,
+      duration: 0.45,
+      ease: "power2.out",
+      onUpdate: () => controls.update()
+    });
   }
 }
 
 function rotateCamera(angle) {
   if (!controls.enabled) enableFreeOrbit();
+  resetUserIdle();
   conductor.resetIdle();
   const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
   offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-  camera.position.addVectors(controls.target, offset);
-  controls.update();
+  const targetX = controls.target.x + offset.x;
+  const targetY = controls.target.y + offset.y;
+  const targetZ = controls.target.z + offset.z;
+  gsap.to(camera.position, {
+    x: targetX,
+    y: targetY,
+    z: targetZ,
+    duration: 0.5,
+    ease: "power2.out",
+    onUpdate: () => controls.update()
+  });
 }
 
 function resetCameraView() {
@@ -361,6 +443,13 @@ function openMenu() {
   menuToggleBtn.setAttribute('aria-expanded', 'true');
   if (hamburgerIcon) hamburgerIcon.classList.add('hidden');
   if (closeIcon) closeIcon.classList.remove('hidden');
+
+  const pills = navMenuDrawer.querySelectorAll('.menu-pill-btn');
+  gsap.killTweensOf(pills);
+  gsap.fromTo(pills,
+    { opacity: 0, x: -14 },
+    { opacity: 1, x: 0, duration: 0.32, stagger: 0.045, ease: "power2.out" }
+  );
 }
 
 function closeMenu() {
@@ -389,6 +478,37 @@ document.addEventListener('click', (e) => {
     closeMenu();
   }
 });
+
+function openAboutModal() {
+  if (!aboutModal) return;
+  aboutModal.classList.remove('hidden');
+  const card = aboutModal.querySelector('.modal-card');
+  if (card) {
+    gsap.killTweensOf(card);
+    gsap.fromTo(card,
+      { opacity: 0, scale: 0.93, y: 18 },
+      { opacity: 1, scale: 1.0, y: 0, duration: 0.36, ease: "power2.out" }
+    );
+  }
+}
+
+function closeAboutModal() {
+  if (!aboutModal) return;
+  const card = aboutModal.querySelector('.modal-card');
+  if (card) {
+    gsap.killTweensOf(card);
+    gsap.to(card, {
+      opacity: 0,
+      scale: 0.95,
+      y: 12,
+      duration: 0.24,
+      ease: "power2.in",
+      onComplete: () => aboutModal.classList.add('hidden')
+    });
+  } else {
+    aboutModal.classList.add('hidden');
+  }
+}
 
 // Menu Pill Item Actions
 menuPillBtns.forEach(btn => {
@@ -430,9 +550,7 @@ menuPillBtns.forEach(btn => {
     } else if (target === 'orbit') {
       toggleFreeOrbit();
     } else if (target === 'about') {
-      if (aboutModal) {
-        aboutModal.classList.remove('hidden');
-      }
+      openAboutModal();
     }
   });
 });
@@ -440,14 +558,14 @@ menuPillBtns.forEach(btn => {
 // About Modal Event Listeners
 if (modalCloseBtn) {
   modalCloseBtn.addEventListener('click', () => {
-    aboutModal.classList.add('hidden');
+    closeAboutModal();
   });
 }
 
 if (aboutModal) {
   aboutModal.addEventListener('click', (e) => {
     if (e.target === aboutModal) {
-      aboutModal.classList.add('hidden');
+      closeAboutModal();
     }
   });
 }
@@ -463,35 +581,41 @@ themeBtns.forEach((btn) => {
     document.body.classList.remove('theme-sunset', 'theme-night', 'theme-day');
     document.body.classList.add(`theme-${theme}`);
 
-    // Update 3D Lighting & Celestial presets
-    lighting.applyPreset(theme);
+    // Update 3D Lighting & Celestial presets with smooth 1.2s GSAP transitions
+    lighting.applyPreset(theme, 1.2);
     celestial.setTheme(theme);
     satelliteIslands.setTheme(theme);
 
-    // Update cloud materials based on atmosphere (including subtle night blue-indigo rim)
-    clouds.setTheme(theme);
+    // Update cloud materials based on atmosphere with smooth 1.2s GSAP transitions
+    clouds.setTheme(theme, 1.2);
     if (theme === 'night') {
       if (bgCloudMat) {
-        bgCloudMat.color.setHex(0x28385a);
-        bgCloudMat.emissive.setHex(0x1a2442);
-        bgCloudMat.emissiveIntensity = 0.85;
-        if (bgCloudMat.sheenColor) bgCloudMat.sheenColor.setHex(0x789ad8);
+        gsap.to(bgCloudMat.color, { r: 0x28/255, g: 0x38/255, b: 0x5a/255, duration: 1.2, ease: "power2.inOut" });
+        gsap.to(bgCloudMat.emissive, { r: 0x1a/255, g: 0x24/255, b: 0x42/255, duration: 1.2, ease: "power2.inOut" });
+        gsap.to(bgCloudMat, { emissiveIntensity: 0.85, duration: 1.2, ease: "power2.inOut" });
+        if (bgCloudMat.sheenColor) {
+          gsap.to(bgCloudMat.sheenColor, { r: 0x78/255, g: 0x9a/255, b: 0xd8/255, duration: 1.2, ease: "power2.inOut" });
+        }
       }
       showToast('Midnight Leylines Activated');
     } else if (theme === 'sunset') {
       if (bgCloudMat) {
-        bgCloudMat.color.setHex(0xf5f0ee);
-        bgCloudMat.emissive.setHex(0x000000);
-        bgCloudMat.emissiveIntensity = 0.0;
-        if (bgCloudMat.sheenColor) bgCloudMat.sheenColor.setHex(0xffcbab);
+        gsap.to(bgCloudMat.color, { r: 0xf5/255, g: 0xf0/255, b: 0xee/255, duration: 1.2, ease: "power2.inOut" });
+        gsap.to(bgCloudMat.emissive, { r: 0, g: 0, b: 0, duration: 1.2, ease: "power2.inOut" });
+        gsap.to(bgCloudMat, { emissiveIntensity: 0.0, duration: 1.2, ease: "power2.inOut" });
+        if (bgCloudMat.sheenColor) {
+          gsap.to(bgCloudMat.sheenColor, { r: 0xff/255, g: 0xcb/255, b: 0xab/255, duration: 1.2, ease: "power2.inOut" });
+        }
       }
       showToast('Golden Sunset Hour');
     } else {
       if (bgCloudMat) {
-        bgCloudMat.color.setHex(0xffffff);
-        bgCloudMat.emissive.setHex(0x000000);
-        bgCloudMat.emissiveIntensity = 0.0;
-        if (bgCloudMat.sheenColor) bgCloudMat.sheenColor.setHex(0xfff8f0);
+        gsap.to(bgCloudMat.color, { r: 1, g: 1, b: 1, duration: 1.2, ease: "power2.inOut" });
+        gsap.to(bgCloudMat.emissive, { r: 0, g: 0, b: 0, duration: 1.2, ease: "power2.inOut" });
+        gsap.to(bgCloudMat, { emissiveIntensity: 0.0, duration: 1.2, ease: "power2.inOut" });
+        if (bgCloudMat.sheenColor) {
+          gsap.to(bgCloudMat.sheenColor, { r: 0xff/255, g: 0xf8/255, b: 0xf0/255, duration: 1.2, ease: "power2.inOut" });
+        }
       }
       showToast('Radiant Daylight Activated');
     }
@@ -586,7 +710,9 @@ function animate(currentTime) {
     controls.update();
   } else if (waypointMode) {
     // 2. Waypoint Landmark Mode (Pumpkin Grove, Cottage Outpost, or Sanctuary)
-    if (isIdle) {
+    if (isFlightActive) {
+      // Camera position & target are being smoothly animated by GSAP power2.inOut
+    } else if (isIdle) {
       // If at an island, first orbit that island for 6.5s, then slowly zoom out to orbit the whole sanctuary
       if (activeWaypointId !== 'sanctuary' && idleActiveDuration < 6.5) {
         islandOrbitAngle += 0.0035;
@@ -633,9 +759,11 @@ function animate(currentTime) {
 
     camera.lookAt(currentCamTarget);
 
-    targetFov = getAdaptiveFOV(waypointFov, camera.aspect);
-    camera.fov += (targetFov - camera.fov) * 0.07;
-    camera.updateProjectionMatrix();
+    if (!isFlightActive) {
+      targetFov = getAdaptiveFOV(waypointFov, camera.aspect);
+      camera.fov += (targetFov - camera.fov) * 0.07;
+      camera.updateProjectionMatrix();
+    }
 
     // Keep OrbitControls pivot aligned with current focus
     controls.target.copy(currentCamTarget);
