@@ -10,6 +10,7 @@ import { createSynthAudio } from './audio/synthAudio.js';
 import { createClouds } from './world/clouds.js';
 import { createCelestial } from './world/celestial.js';
 import { createSatelliteIslands } from './world/satelliteIslands.js';
+import { createRainbow } from './world/rainbow.js';
 
 // DOM Elements
 const canvas = document.getElementById('webgl');
@@ -53,6 +54,7 @@ const particles = createParticles(scene, tower.chimneyOrigin, tower.cauldronOrig
 const clouds = createClouds(scene);
 const celestial = createCelestial(scene);
 const satelliteIslands = createSatelliteIslands(scene);
+const rainbow = createRainbow(scene);
 const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
@@ -61,6 +63,7 @@ lighting.applyPreset('sunset', 0);
 celestial.setTheme('sunset');
 satelliteIslands.setTheme('sunset');
 clouds.setTheme('sunset', 0);
+rainbow.setTheme('sunset', 0);
 
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
@@ -585,6 +588,7 @@ themeBtns.forEach((btn) => {
     lighting.applyPreset(theme, 1.2);
     celestial.setTheme(theme);
     satelliteIslands.setTheme(theme);
+    rainbow.setTheme(theme, 1.2);
 
     // Update cloud materials based on atmosphere with smooth 1.2s GSAP transitions
     clouds.setTheme(theme, 1.2);
@@ -781,6 +785,9 @@ function animate(currentTime) {
 
   // Update Sun, Moon, rich starfield, and shooting stars
   celestial.update(dt, time);
+
+  // Update atmospheric ethereal sky rainbow
+  rainbow.update(dt, time);
 
   // Update background clouds & twinkling stars
   updateScene(dt, time);
