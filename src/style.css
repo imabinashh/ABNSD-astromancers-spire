@@ -1017,3 +1017,98 @@ body.mode-free-orbit .scroll-container {
     font-size: 0.72rem;
   }
 }
+
+/* ========================================================
+   PURE FLOATING STORY OVERLAY (Zero containers, pure typography)
+   ======================================================== */
+.story-overlay {
+  position: fixed;
+  left: clamp(24px, 5.5vw, 68px);
+  top: 48%;
+  transform: translateY(-50%);
+  max-width: clamp(260px, 26vw, 380px);
+  z-index: 15;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.story-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(calc(-50% + 8px));
+}
+
+body.mode-free-orbit .story-overlay {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.story-tag {
+  font-family: var(--font-sans);
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold-celestial);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 1px 3px rgba(0, 0, 0, 0.95);
+  margin-bottom: 2px;
+}
+
+.story-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.45rem, 2.0vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.85), 0 1px 4px rgba(0, 0, 0, 0.95);
+}
+
+.story-desc {
+  font-family: var(--font-sans);
+  font-size: clamp(0.88rem, 0.98vw, 0.96rem);
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(248, 246, 242, 0.92);
+  margin: 0;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85), 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.story-prompt {
+  margin-top: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan-spectral);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: promptPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes promptPulse {
+  0%, 100% { opacity: 0.55; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(3px); }
+}
+
+@media (max-width: 768px) {
+  .story-overlay {
+    left: 20px;
+    right: 20px;
+    top: auto;
+    bottom: 84px;
+    transform: none;
+    max-width: none;
+    text-align: center;
+    align-items: center;
+  }
+}
+

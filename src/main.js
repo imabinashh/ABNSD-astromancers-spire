@@ -37,6 +37,13 @@ const aboutModal = document.getElementById('about-modal');
 const modalCloseBtn = document.getElementById('modal-close-btn');
 const landmarkToast = document.getElementById('landmark-toast');
 
+// Pure Floating Story Overlay DOM (Zero containers, pure typography)
+const storyOverlay = document.getElementById('story-overlay');
+const storyTag = document.getElementById('story-tag');
+const storyTitle = document.getElementById('story-title');
+const storyDesc = document.getElementById('story-desc');
+const storyPrompt = document.getElementById('story-prompt');
+
 // Floating Camera HUD DOM
 const cameraControlsHud = document.getElementById('camera-controls-hud');
 const camResetBtn = document.getElementById('cam-reset-btn');
@@ -218,6 +225,127 @@ function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark
   });
 }
 
+// Pure Floating Storytelling Chapters (Mapped to 360° Spire Orbit & Island Expedition)
+const storyBeats = [
+  {
+    range: [0.00, 0.09],
+    tag: "THE CELESTIAL SANCTUARY",
+    title: "Welcome, Traveler",
+    desc: "A quiet sanctuary of ancient starcraft floating high above the clouds.",
+    prompt: "Scroll down to embark"
+  },
+  {
+    range: [0.09, 0.23],
+    tag: "HEART OF THE SANCTUARY",
+    title: "The Astromancer's Spire",
+    desc: "Ancient stone masonry and simmering potion draughts guard the celestial leylines.",
+    prompt: ""
+  },
+  {
+    range: [0.23, 0.35],
+    tag: "THE WIZARD'S HEARTH",
+    title: "Chimney & Whispering Mists",
+    desc: "Drifting hearth smoke ascends from the crooked slate roof into the peaceful mountain sky.",
+    prompt: ""
+  },
+  {
+    range: [0.35, 0.46],
+    tag: "THE TIMBER OBSERVATORY",
+    title: "Rafters of the North",
+    desc: "Cantilevered wooden study beams peer through quiet pine trees toward the rope bridge.",
+    prompt: ""
+  },
+  {
+    range: [0.46, 0.65],
+    tag: "THE ALCHEMIST'S GARDEN",
+    title: "Pumpkin Grove",
+    desc: "Glowing autumn gourds rest upon stone pedestals beneath the silent lantern crane.",
+    prompt: ""
+  },
+  {
+    range: [0.65, 0.88],
+    tag: "THE APPRENTICE'S WATCH",
+    title: "Cottage Outpost",
+    desc: "Across floating stepping stones, the turquoise belfry lantern keeps watch over the quiet void.",
+    prompt: ""
+  },
+  {
+    range: [0.88, 1.00],
+    tag: "THE SANCTUARY AT PEACE",
+    title: "Harmony in the Clouds",
+    desc: "The floating archipelago rests in eternal balance. Switch to Free Orbit anytime to explore.",
+    prompt: ""
+  }
+];
+
+let currentBeatIndex = -1;
+
+function updateStoryText(progress) {
+  if (controls.enabled || waypointMode) {
+    if (storyOverlay && !storyOverlay.classList.contains('hidden')) {
+      storyOverlay.classList.add('hidden');
+    }
+    return;
+  }
+
+  if (storyOverlay && storyOverlay.classList.contains('hidden')) {
+    storyOverlay.classList.remove('hidden');
+  }
+
+  let beatIndex = 0;
+  for (let i = 0; i < storyBeats.length; i++) {
+    const [min, max] = storyBeats[i].range;
+    if (progress >= min && (progress < max || i === storyBeats.length - 1)) {
+      beatIndex = i;
+      break;
+    }
+  }
+
+  if (beatIndex === currentBeatIndex) return;
+  currentBeatIndex = beatIndex;
+  const beat = storyBeats[beatIndex];
+
+  if (!storyOverlay || !storyTag || !storyTitle || !storyDesc) return;
+
+  // Kill existing tweens on story elements to prevent jerking
+  gsap.killTweensOf([storyTag, storyTitle, storyDesc, storyPrompt]);
+
+  // Silky smooth cross-fade without layout shift or jerk
+  gsap.to([storyTag, storyTitle, storyDesc, storyPrompt], {
+    opacity: 0,
+    y: -5,
+    duration: 0.18,
+    ease: "power2.in",
+    onComplete: () => {
+      storyTag.textContent = beat.tag;
+      storyTitle.textContent = beat.title;
+      storyDesc.textContent = beat.desc;
+
+      if (storyPrompt) {
+        if (beat.prompt) {
+          const promptSpan = storyPrompt.querySelector('span');
+          if (promptSpan) promptSpan.textContent = beat.prompt;
+          storyPrompt.style.display = 'inline-flex';
+        } else {
+          storyPrompt.style.display = 'none';
+        }
+      }
+
+      gsap.fromTo(
+        [storyTag, storyTitle, storyDesc, storyPrompt],
+        { opacity: 0, y: 7 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.42,
+          stagger: 0.04,
+          ease: "power2.out"
+        }
+      );
+    }
+  });
+}
+
 // 2. Initialize Scroll Conductor
 const conductor = createScrollConductor({
   damping: 5.0,
@@ -226,6 +354,9 @@ const conductor = createScrollConductor({
     if (progressFill) {
       progressFill.style.width = `${(smooth * 100).toFixed(1)}%`;
     }
+
+    // Update pure floating story typography
+    updateStoryText(smooth);
 
     // When viewing a landmark waypoint, do not let scroll track override camera
     if (waypointMode) {
@@ -336,6 +467,9 @@ function enableFreeOrbit(silent = false) {
   if (cameraControlsHud) {
     cameraControlsHud.classList.remove('hidden');
   }
+  if (storyOverlay) {
+    storyOverlay.classList.add('hidden');
+  }
   updateCameraModeUI(true);
   if (!silent) {
     showToast('Free Orbit Active • Drag to inspect 360°');
@@ -351,7 +485,12 @@ function disableFreeOrbit(silent = false) {
   if (cameraControlsHud) {
     cameraControlsHud.classList.add('hidden');
   }
+  if (storyOverlay) {
+    storyOverlay.classList.remove('hidden');
+  }
   updateCameraModeUI(false);
+  currentBeatIndex = -1;
+  updateStoryText(conductor.getSmooth());
   if (!silent) {
     showToast('Guided Scroll Active');
     audio.playTinkle();
@@ -433,6 +572,11 @@ function resetCameraView() {
   );
   conductor.setProgress(0.0, false);
   window.scrollTo({ top: 0, behavior: 'instant' });
+  currentBeatIndex = -1;
+  if (storyOverlay) {
+    storyOverlay.classList.remove('hidden');
+  }
+  updateStoryText(0);
   menuPillBtns.forEach(b => b.classList.remove('active'));
   const sanctuaryBtn = document.querySelector('.menu-pill-btn[data-target="sanctuary"]');
   if (sanctuaryBtn) sanctuaryBtn.classList.add('active');
@@ -524,6 +668,9 @@ function closeAboutModal() {
 // Helper to focus any island dynamically with GSAP (Dead Center Island Framing)
 function focusIsland(islandId) {
   audio.playTinkle();
+  if (storyOverlay) {
+    storyOverlay.classList.add('hidden');
+  }
   if (islandId === 'pumpkin') {
     flyToWaypoint(
       new THREE.Vector3(-11.5, 3.8, 16.5),
