@@ -125,7 +125,7 @@
   <!-- CENTER: Solid About Modal Dialog (Grimoire Card) -->
   <div id="about-modal" class="modal-backdrop hidden" aria-modal="true" role="dialog">
     <div class="modal-card">
-      <!-- 4 Celestial Corner Filigree Brackets -->
+      <!-- 4 Celestial Corner Filigree Brackets (Pinned to card frame) -->
       <svg class="modal-corner corner-tl" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" aria-hidden="true">
         <path d="M2 30V6a4 4 0 0 1 4-4h24" stroke-width="1.6" />
         <path d="M7 30V11a4 4 0 0 1 4-4h19" stroke-width="1" stroke-opacity="0.5" />
@@ -147,6 +147,7 @@
         <polygon points="6,6 8,4 10,6 8,8" fill="currentColor" stroke="none" />
       </svg>
 
+      <!-- Pinned Close Medallion Button -->
       <button id="modal-close-btn" class="modal-close-btn" aria-label="Close About Dialog">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
           <line x1="5" y1="5" x2="19" y2="19"></line>
@@ -154,57 +155,75 @@
         </svg>
       </button>
 
-      <div class="modal-header">
-        <span class="modal-badge">SANCTUARY ARCHIVE</span>
-        <h2 class="modal-title">ASTROMANCER'S SPIRE</h2>
-        <div class="modal-astrolabe-divider" aria-hidden="true">
-          <svg class="astrolabe-divider-svg" viewBox="0 0 280 20" width="240" height="18" fill="none" stroke="currentColor">
-            <line x1="10" y1="10" x2="115" y2="10" stroke="url(#goldGrad)" stroke-width="1.2" />
-            <circle cx="140" cy="10" r="7" stroke="#c69b53" stroke-width="1.2" />
-            <circle cx="140" cy="10" r="3.5" stroke="#4deeea" stroke-width="1" />
-            <polygon points="140,2 142,8 148,10 142,12 140,18 138,12 132,10 138,8" fill="#f5e6c8" stroke="none" />
-            <circle cx="123" cy="10" r="1.5" fill="#c69b53" />
-            <circle cx="157" cy="10" r="1.5" fill="#c69b53" />
-            <line x1="165" y1="10" x2="270" y2="10" stroke="url(#goldGradRev)" stroke-width="1.2" />
-            <defs>
-              <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#c69b53" stop-opacity="0" />
-                <stop offset="100%" stop-color="#c69b53" stop-opacity="0.9" />
-              </linearGradient>
-              <linearGradient id="goldGradRev" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#c69b53" stop-opacity="0.9" />
-                <stop offset="100%" stop-color="#c69b53" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <p class="modal-subtitle">An Interactive Low-Poly 3D Architectural Odyssey</p>
-      </div>
-
-      <div class="modal-body">
-        <div class="modal-section">
-          <h3>THE WORLD</h3>
-          <p>Perched high above the cloud line, the Astromancer's Spire rests at the confluence of celestial leylines. From the crooked slate tower and smoking chimney to the alchemist's pumpkin grove and the apprentice's belfry cottage, each island floats in peaceful harmony beneath the rainbow.</p>
+      <!-- Smooth Scrollable Content Pane (Prevents corner ornament drift) -->
+      <div class="modal-scroll-pane">
+        <div class="modal-header">
+          <span class="modal-badge">SANCTUARY ARCHIVE</span>
+          <h2 class="modal-title">ASTROMANCER'S SPIRE</h2>
+          <div class="modal-astrolabe-divider" aria-hidden="true">
+            <svg class="astrolabe-divider-svg" viewBox="0 0 280 20" width="240" height="18" fill="none" stroke="currentColor">
+              <line x1="10" y1="10" x2="115" y2="10" stroke="url(#goldGrad)" stroke-width="1.2" />
+              <circle cx="140" cy="10" r="7" stroke="#c69b53" stroke-width="1.2" />
+              <circle cx="140" cy="10" r="3.5" stroke="#4deeea" stroke-width="1" />
+              <polygon points="140,2 142,8 148,10 142,12 140,18 138,12 132,10 138,8" fill="#f5e6c8" stroke="none" />
+              <circle cx="123" cy="10" r="1.5" fill="#c69b53" />
+              <circle cx="157" cy="10" r="1.5" fill="#c69b53" />
+              <line x1="165" y1="10" x2="270" y2="10" stroke="url(#goldGradRev)" stroke-width="1.2" />
+              <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#c69b53" stop-opacity="0" />
+                  <stop offset="100%" stop-color="#c69b53" stop-opacity="0.9" />
+                </linearGradient>
+                <linearGradient id="goldGradRev" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#c69b53" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="#c69b53" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <p class="modal-subtitle">An Interactive Low-Poly 3D Architectural Odyssey</p>
         </div>
 
-        <div class="modal-section">
-          <h3>INTERACTION</h3>
-          <ul class="modal-list">
-            <li><strong>Guided Flight:</strong> Scroll or swipe to embark on a seamless, continuous flight orbiting the Spire, crossing the rope bridge to Pumpkin Grove, and exploring the Cottage Outpost.</li>
-            <li><strong>Atmosphere Cycle:</strong> Experience <strong>Day</strong>, <strong>Sunset</strong>, and <strong>Night</strong> from the top-right dock to watch the shifting light, stars, and celestial shadows.</li>
-            <li><strong>Free Orbit:</strong> Switch camera modes to take the helm and inspect the low-poly architecture from any 3D angle.</li>
-            <li><strong>Sanctuary Navigation:</strong> Use the top-left grimoire menu to fast-travel directly to any landmark.</li>
-          </ul>
+        <div class="modal-body">
+          <div class="modal-section">
+            <h3>THE WORLD</h3>
+            <p>Perched high above the cloud line, the Astromancer's Spire rests at the confluence of celestial leylines. From the crooked slate tower and smoking chimney to the alchemist's pumpkin grove and the apprentice's belfry cottage, each island floats in peaceful harmony beneath the rainbow.</p>
+          </div>
+
+          <div class="modal-section">
+            <h3>INTERACTION</h3>
+            <div class="interaction-cards-list">
+              <div class="interaction-card">
+                <div class="interaction-title">Guided Flight</div>
+                <div class="interaction-desc">Scroll or swipe to embark on a seamless, continuous flight orbiting the Spire, crossing the rope bridge to Pumpkin Grove, and exploring the Cottage Outpost.</div>
+              </div>
+
+              <div class="interaction-card">
+                <div class="interaction-title">Atmosphere Cycle</div>
+                <div class="interaction-desc">Experience <strong>Day</strong>, <strong>Sunset</strong>, and <strong>Night</strong> from the top-right dock to watch the shifting light, stars, and celestial shadows.</div>
+              </div>
+
+              <div class="interaction-card">
+                <div class="interaction-title">Free Orbit</div>
+                <div class="interaction-desc">Switch camera modes to take the helm and inspect the low-poly architecture from any 3D angle.</div>
+              </div>
+
+              <div class="interaction-card">
+                <div class="interaction-title">Sanctuary Navigation</div>
+                <div class="interaction-desc">Use the top-left grimoire menu to fast-travel directly to any landmark.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h3>CRAFT</h3>
+            <p>Crafted with real-time Three.js &amp; WebGL, synchronized Catmull-Rom camera splines, dynamic atmospheric lighting, celestial particle systems, and synthetic Web Audio chimes.</p>
+          </div>
         </div>
 
-        <div class="modal-section">
-          <h3>CRAFT</h3>
-          <p>Crafted with real-time Three.js &amp; WebGL, synchronized Catmull-Rom camera splines, dynamic atmospheric lighting, celestial particle systems, and synthetic Web Audio chimes.</p>
+        <div class="modal-footer">
+          <span>Made with love by <strong>Abinash</strong></span>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <span>Made with love by <strong>Abinash</strong></span>
       </div>
     </div>
   </div>
