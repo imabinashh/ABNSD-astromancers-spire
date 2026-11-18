@@ -1134,3 +1134,176 @@ body.theme-day .story-prompt {
   }
 }
 
+/* ========================================================
+   MINIMALIST ARCANE RETICLE — CUSTOM CURSOR
+   ======================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+  body.custom-cursor-enabled,
+  body.custom-cursor-enabled *,
+  body.custom-cursor-enabled button,
+  body.custom-cursor-enabled a {
+    cursor: none !important;
+  }
+}
+
+.arcane-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 100000;
+  mix-blend-mode: difference;
+  transition: opacity 0.25s ease;
+}
+
+.arcane-cursor.is-outside {
+  opacity: 0;
+}
+
+/* Core Dot: 0-latency tracking point */
+.arcane-cursor .cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0);
+  will-change: transform;
+  transition: opacity 0.2s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Outer Arcane Coordinate Ring */
+.arcane-cursor .cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border: 1.2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate3d(-50%, -50%, 0);
+  will-change: transform, width, height, border-color, background-color;
+  transition: width 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arcane-cursor .ring-dial {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Inner delicate dashed ring for the astrolabe dial detail */
+.arcane-cursor .arcane-inner-ring {
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(255, 255, 255, 0.38);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, border-color 0.2s ease;
+}
+
+/* 4 Micro Crosshair Ticks (North, East, South, West) */
+.arcane-cursor .crosshair-tick {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.arcane-cursor .tick-n {
+  top: -4px;
+  left: 50%;
+  width: 1.2px;
+  height: 4px;
+  transform: translateX(-50%);
+}
+
+.arcane-cursor .tick-s {
+  bottom: -4px;
+  left: 50%;
+  width: 1.2px;
+  height: 4px;
+  transform: translateX(-50%);
+}
+
+.arcane-cursor .tick-w {
+  left: -4px;
+  top: 50%;
+  width: 4px;
+  height: 1.2px;
+  transform: translateY(-50%);
+}
+
+.arcane-cursor .tick-e {
+  right: -4px;
+  top: 50%;
+  width: 4px;
+  height: 1.2px;
+  transform: translateY(-50%);
+}
+
+/* Hovering Interactive Element State */
+.arcane-cursor.is-hovering .cursor-ring {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.arcane-cursor.is-hovering .cursor-dot {
+  transform: translate3d(-50%, -50%, 0) scale(0.6);
+  opacity: 0.7;
+}
+
+.arcane-cursor.is-hovering .arcane-inner-ring {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.08);
+}
+
+/* Clicking / MouseDown Tactile State */
+.arcane-cursor.is-clicking .cursor-ring {
+  width: 26px;
+  height: 26px;
+  border-width: 1.6px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.arcane-cursor.is-clicking .cursor-dot {
+  transform: translate3d(-50%, -50%, 0) scale(1.4);
+}
+
+/* Free Orbit Dragging Reticle */
+.arcane-cursor.is-orbiting .cursor-ring {
+  width: 46px;
+  height: 46px;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+.arcane-cursor.is-orbiting .ring-dial {
+  animation: dialSpin 4s linear infinite;
+}
+
+@keyframes dialSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

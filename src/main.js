@@ -11,6 +11,7 @@ import { createClouds } from './world/clouds.js';
 import { createCelestial } from './world/celestial.js';
 import { createSatelliteIslands } from './world/satelliteIslands.js';
 import { createRainbow } from './world/rainbow.js';
+import { initCustomCursor } from './ui/customCursor.js';
 
 // DOM Elements
 const canvas = document.getElementById('webgl');
@@ -131,6 +132,9 @@ if (window.matchMedia('(pointer: fine)').matches) {
     mouse.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 }
+
+// Minimalist Arcane Reticle Custom Cursor
+const customCursor = initCustomCursor();
 
 // GSAP Flight Tween Handles
 let camPosTween = null;
@@ -520,6 +524,9 @@ window.addEventListener('touchmove', () => {
 }, { passive: true });
 
 function updateCameraModeUI(isOrbit) {
+  if (customCursor) {
+    customCursor.setOrbitMode(isOrbit);
+  }
   if (modeScrollBtn) {
     modeScrollBtn.classList.toggle('active', !isOrbit);
     modeScrollBtn.setAttribute('aria-checked', String(!isOrbit));
