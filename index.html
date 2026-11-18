@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/wizard-head.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body class="theme-sunset">
@@ -111,11 +111,33 @@
     </button>
   </aside>
 
-  <!-- CENTER: Solid About Modal Dialog -->
+  <!-- CENTER: Solid About Modal Dialog (Grimoire Card) -->
   <div id="about-modal" class="modal-backdrop hidden" aria-modal="true" role="dialog">
     <div class="modal-card">
+      <!-- 4 Celestial Corner Filigree Brackets -->
+      <svg class="modal-corner corner-tl" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M2 30V6a4 4 0 0 1 4-4h24" stroke-width="1.6" />
+        <path d="M7 30V11a4 4 0 0 1 4-4h19" stroke-width="1" stroke-opacity="0.5" />
+        <polygon points="6,6 8,4 10,6 8,8" fill="currentColor" stroke="none" />
+      </svg>
+      <svg class="modal-corner corner-tr" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M2 30V6a4 4 0 0 1 4-4h24" stroke-width="1.6" />
+        <path d="M7 30V11a4 4 0 0 1 4-4h19" stroke-width="1" stroke-opacity="0.5" />
+        <polygon points="6,6 8,4 10,6 8,8" fill="currentColor" stroke="none" />
+      </svg>
+      <svg class="modal-corner corner-bl" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M2 30V6a4 4 0 0 1 4-4h24" stroke-width="1.6" />
+        <path d="M7 30V11a4 4 0 0 1 4-4h19" stroke-width="1" stroke-opacity="0.5" />
+        <polygon points="6,6 8,4 10,6 8,8" fill="currentColor" stroke="none" />
+      </svg>
+      <svg class="modal-corner corner-br" viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="M2 30V6a4 4 0 0 1 4-4h24" stroke-width="1.6" />
+        <path d="M7 30V11a4 4 0 0 1 4-4h19" stroke-width="1" stroke-opacity="0.5" />
+        <polygon points="6,6 8,4 10,6 8,8" fill="currentColor" stroke="none" />
+      </svg>
+
       <button id="modal-close-btn" class="modal-close-btn" aria-label="Close About Dialog">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
           <line x1="5" y1="5" x2="19" y2="19"></line>
           <line x1="19" y1="5" x2="5" y2="19"></line>
         </svg>
@@ -124,6 +146,27 @@
       <div class="modal-header">
         <span class="modal-badge">SANCTUARY ARCHIVE</span>
         <h2 class="modal-title">ASTROMANCER'S SPIRE</h2>
+        <div class="modal-astrolabe-divider" aria-hidden="true">
+          <svg class="astrolabe-divider-svg" viewBox="0 0 280 20" width="240" height="18" fill="none" stroke="currentColor">
+            <line x1="10" y1="10" x2="115" y2="10" stroke="url(#goldGrad)" stroke-width="1.2" />
+            <circle cx="140" cy="10" r="7" stroke="#c69b53" stroke-width="1.2" />
+            <circle cx="140" cy="10" r="3.5" stroke="#4deeea" stroke-width="1" />
+            <polygon points="140,2 142,8 148,10 142,12 140,18 138,12 132,10 138,8" fill="#f5e6c8" stroke="none" />
+            <circle cx="123" cy="10" r="1.5" fill="#c69b53" />
+            <circle cx="157" cy="10" r="1.5" fill="#c69b53" />
+            <line x1="165" y1="10" x2="270" y2="10" stroke="url(#goldGradRev)" stroke-width="1.2" />
+            <defs>
+              <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#c69b53" stop-opacity="0" />
+                <stop offset="100%" stop-color="#c69b53" stop-opacity="0.9" />
+              </linearGradient>
+              <linearGradient id="goldGradRev" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#c69b53" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#c69b53" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
         <p class="modal-subtitle">An Interactive Low-Poly 3D Architectural Odyssey</p>
       </div>
 
