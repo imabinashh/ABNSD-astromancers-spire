@@ -1135,7 +1135,7 @@ body.theme-day .story-prompt {
 }
 
 /* ========================================================
-   MINIMALIST ARCANE RETICLE — CUSTOM CURSOR
+   CONCEPT 1: THE CELESTIAL STARDUST & ORB — CUSTOM CURSOR
    ======================================================== */
 
 @media (hover: hover) and (pointer: fine) {
@@ -1147,7 +1147,7 @@ body.theme-day .story-prompt {
   }
 }
 
-.arcane-cursor {
+.celestial-cursor-wrap {
   position: fixed;
   top: 0;
   left: 0;
@@ -1155,155 +1155,157 @@ body.theme-day .story-prompt {
   height: 0;
   pointer-events: none;
   z-index: 100000;
-  mix-blend-mode: difference;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.28s ease;
 }
 
-.arcane-cursor.is-outside {
+.celestial-cursor-wrap.is-outside {
   opacity: 0;
 }
 
-/* Core Dot: 0-latency tracking point */
-.arcane-cursor .cursor-dot {
+/* 1. Zero-Latency Core: 4-Pointed Golden-Diamond Star */
+.celestial-star-core {
   position: fixed;
   top: 0;
   left: 0;
-  width: 5px;
-  height: 5px;
-  background-color: #ffffff;
-  border-radius: 50%;
+  width: 16px;
+  height: 16px;
   pointer-events: none;
   transform: translate3d(-50%, -50%, 0);
   will-change: transform;
-  transition: opacity 0.2s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 5px rgba(255, 209, 102, 0.85)) drop-shadow(0 0 10px rgba(77, 238, 234, 0.5));
+  transition: filter 0.2s ease;
 }
 
-/* Outer Arcane Coordinate Ring */
-.arcane-cursor .cursor-ring {
+.celestial-star-svg {
+  width: 16px;
+  height: 16px;
+  overflow: visible;
+  animation: starTwinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.12) rotate(4deg); }
+}
+
+/* 2. Trailing Celestial Orbit Ring */
+.celestial-orbit-ring {
   position: fixed;
   top: 0;
   left: 0;
-  width: 36px;
-  height: 36px;
-  border: 1.2px solid rgba(255, 255, 255, 0.85);
+  width: 32px;
+  height: 32px;
+  border: 1.2px solid rgba(255, 209, 102, 0.65);
   border-radius: 50%;
   pointer-events: none;
   transform: translate3d(-50%, -50%, 0);
-  will-change: transform, width, height, border-color, background-color;
-  transition: width 0.26s cubic-bezier(0.16, 1, 0.3, 1),
-              height 0.26s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.2s ease,
-              background-color 0.2s ease;
+  will-change: transform, width, height, border-color, box-shadow;
+  box-shadow: 0 0 10px rgba(77, 238, 234, 0.35), inset 0 0 5px rgba(255, 209, 102, 0.2);
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease,
+              background-color 0.22s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.arcane-cursor .ring-dial {
+/* Gyroscope Disc elements (Only visible in Free Orbit mode) */
+.gyroscope-disc {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-/* Inner delicate dashed ring for the astrolabe dial detail */
-.arcane-cursor .arcane-inner-ring {
+.gyro-ring-h {
   position: absolute;
-  inset: 4px;
-  border: 1px dashed rgba(255, 255, 255, 0.38);
+  width: 100%;
+  height: 100%;
+  border: 1px dashed rgba(77, 238, 234, 0.7);
   border-radius: 50%;
-  pointer-events: none;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, border-color 0.2s ease;
+  transform: rotateX(65deg);
 }
 
-/* 4 Micro Crosshair Ticks (North, East, South, West) */
-.arcane-cursor .crosshair-tick {
+.gyro-ring-v {
   position: absolute;
-  background: rgba(255, 255, 255, 0.95);
-  pointer-events: none;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 209, 102, 0.6);
+  border-radius: 50%;
+  transform: rotateY(65deg);
 }
 
-.arcane-cursor .tick-n {
-  top: -4px;
-  left: 50%;
-  width: 1.2px;
-  height: 4px;
-  transform: translateX(-50%);
+/* 3. Hovering Interactive Elements State */
+.celestial-cursor-wrap.is-hovering .celestial-orbit-ring {
+  width: 50px;
+  height: 50px;
+  border-color: #4deeea;
+  background: rgba(77, 238, 234, 0.08);
+  box-shadow: 0 0 16px rgba(77, 238, 234, 0.65), inset 0 0 10px rgba(77, 238, 234, 0.3);
 }
 
-.arcane-cursor .tick-s {
-  bottom: -4px;
-  left: 50%;
-  width: 1.2px;
-  height: 4px;
-  transform: translateX(-50%);
+.celestial-cursor-wrap.is-hovering .celestial-star-core {
+  filter: drop-shadow(0 0 8px #4deeea) drop-shadow(0 0 14px rgba(77, 238, 234, 0.8));
 }
 
-.arcane-cursor .tick-w {
-  left: -4px;
-  top: 50%;
-  width: 4px;
-  height: 1.2px;
-  transform: translateY(-50%);
+/* 4. Clicking / MouseDown State */
+.celestial-cursor-wrap.is-clicking .celestial-orbit-ring {
+  width: 22px;
+  height: 22px;
+  border-width: 1.8px;
+  border-color: #ffd166;
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.8), inset 0 0 8px rgba(255, 209, 102, 0.4);
 }
 
-.arcane-cursor .tick-e {
-  right: -4px;
-  top: 50%;
-  width: 4px;
-  height: 1.2px;
-  transform: translateY(-50%);
+.celestial-cursor-wrap.is-clicking .celestial-star-core {
+  transform: translate3d(-50%, -50%, 0) scale(1.35);
 }
 
-/* Hovering Interactive Element State */
-.arcane-cursor.is-hovering .cursor-ring {
-  width: 52px;
-  height: 52px;
-  border-color: rgba(255, 255, 255, 1);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.arcane-cursor.is-hovering .cursor-dot {
-  transform: translate3d(-50%, -50%, 0) scale(0.6);
-  opacity: 0.7;
-}
-
-.arcane-cursor.is-hovering .arcane-inner-ring {
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: scale(1.08);
-}
-
-/* Clicking / MouseDown Tactile State */
-.arcane-cursor.is-clicking .cursor-ring {
-  width: 26px;
-  height: 26px;
-  border-width: 1.6px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.arcane-cursor.is-clicking .cursor-dot {
-  transform: translate3d(-50%, -50%, 0) scale(1.4);
-}
-
-/* Free Orbit Dragging Reticle */
-.arcane-cursor.is-orbiting .cursor-ring {
+/* 5. Free Orbit Mode: Celestial Gyroscope Reticle */
+.celestial-cursor-wrap.is-orbiting .celestial-orbit-ring {
   width: 46px;
   height: 46px;
-  border-style: dashed;
-  border-color: rgba(255, 255, 255, 0.95);
+  border: 1.2px solid rgba(255, 209, 102, 0.8);
+  box-shadow: 0 0 14px rgba(77, 238, 234, 0.5);
 }
 
-.arcane-cursor.is-orbiting .ring-dial {
-  animation: dialSpin 4s linear infinite;
+.celestial-cursor-wrap.is-orbiting .gyroscope-disc {
+  opacity: 1;
+  animation: gyroSpin 5s linear infinite;
 }
 
-@keyframes dialSpin {
+@keyframes gyroSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* 6. Ephemeral Stardust Sparks Container */
+.stardust-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 100001;
+}
+
+.stardust-spark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
 }
 
