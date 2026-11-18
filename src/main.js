@@ -521,31 +521,31 @@ function closeAboutModal() {
   }
 }
 
-// Helper to focus any island dynamically with GSAP
+// Helper to focus any island dynamically with GSAP (Dead Center Island Framing)
 function focusIsland(islandId) {
   audio.playTinkle();
   if (islandId === 'pumpkin') {
     flyToWaypoint(
-      new THREE.Vector3(-19.0, 8.0, 17.0),
-      new THREE.Vector3(-15.5, 4.2, 5.5),
+      new THREE.Vector3(-11.5, 3.8, 16.5),
+      new THREE.Vector3(-11.5, 0.6, 5.0),
       38,
       "Pumpkin Grove • The Alchemist's Garden",
       'pumpkin'
     );
   } else if (islandId === 'cottage') {
     flyToWaypoint(
-      new THREE.Vector3(20.0, 8.6, 7.0),
-      new THREE.Vector3(16.5, 4.8, -4.5),
+      new THREE.Vector3(11.5, 4.2, 7.5),
+      new THREE.Vector3(11.5, 1.2, -4.5),
       38,
       "Cottage Outpost • The Apprentice's Watch",
       'cottage'
     );
   } else {
     flyToWaypoint(
-      new THREE.Vector3(10.0, 10.8, 32.5),
+      new THREE.Vector3(4.5, 6.8, 14.5),
       new THREE.Vector3(0.0, 5.2, 0.0),
-      42,
-      "The Sanctuary • Full Archipelago View",
+      40,
+      "The Astromancer's Spire & Sanctuary",
       'sanctuary'
     );
   }
@@ -789,29 +789,28 @@ function animate(currentTime) {
     if (isFlightActive) {
       // Camera position & target are being smoothly animated by GSAP power2.inOut
     } else if (isIdle) {
-      // If at an island, first orbit that island for 6.5s, then slowly zoom out to orbit the whole sanctuary
-      if (activeWaypointId !== 'sanctuary' && idleActiveDuration < 6.5) {
+      // Gently orbit around whatever landmark/island is currently selected
+      if (activeWaypointId !== 'sanctuary' && activeWaypointId !== 'overview') {
         islandOrbitAngle += 0.0035;
-        const islandRadius = 10.5;
+        const islandRadius = 11.5;
         const orbitX = waypointTarget.x + Math.sin(islandOrbitAngle) * islandRadius;
-        const orbitY = waypointCamPos.y + 0.3;
+        const orbitY = waypointCamPos.y + Math.sin(islandOrbitAngle * 0.5) * 0.35;
         const orbitZ = waypointTarget.z + Math.cos(islandOrbitAngle) * islandRadius;
         waypointOrbitPos.set(orbitX, orbitY, orbitZ);
 
         currentCamPos.lerp(waypointOrbitPos, 0.045);
         currentCamTarget.lerp(waypointTarget, 0.05);
       } else {
-        // Slowly zooms out and orbits the whole sanctuary again!
+        // Orbit around the Sanctuary Spire
         sanctuaryOrbitAngle += 0.0028;
-        const sanctuaryRadius = 23.5;
+        const sanctuaryRadius = activeWaypointId === 'overview' ? 33.5 : 15.5;
         const orbitX = Math.sin(sanctuaryOrbitAngle) * sanctuaryRadius;
-        const orbitY = 14.5;
+        const orbitY = activeWaypointId === 'overview' ? 10.8 : 7.2;
         const orbitZ = Math.cos(sanctuaryOrbitAngle) * sanctuaryRadius;
         sanctuaryOrbitPos.set(orbitX, orbitY, orbitZ);
 
         currentCamPos.lerp(sanctuaryOrbitPos, 0.026);
-        currentCamTarget.lerp(towerCenterTarget, 0.035);
-        targetFov = 42;
+        currentCamTarget.lerp(waypointTarget, 0.035);
       }
     } else {
       // User is actively looking at the landmark
