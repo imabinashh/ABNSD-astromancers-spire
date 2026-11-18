@@ -228,6 +228,7 @@ function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark
 // State tracking for journey progress and end-of-scroll actions
 let hasCompletedInitialLanding = false;
 let hasAutoOpenedMenuAtEnd = false;
+let isAutoMenu = false;
 let storyFadeTimeout = null;
 
 // Pure Floating Storytelling Chapters (Mapped to slow reading plateaus & islands)
@@ -242,7 +243,7 @@ const storyBeats = [
   },
   {
     id: 'spire',
-    range: [0.09, 0.22],
+    range: [0.09, 0.21],
     tag: "HEART OF THE SANCTUARY",
     title: "The Astromancer's Spire",
     desc: "Ancient stone masonry and simmering potion draughts guard the celestial leylines.",
@@ -278,10 +279,11 @@ let currentBeatIndex = -1;
 
 function hideStoryTemporarily() {
   if (!storyOverlay || storyOverlay.classList.contains('hidden')) return;
+  gsap.killTweensOf([storyOverlay, storyTag, storyTitle, storyDesc, storyPrompt]);
   gsap.to(storyOverlay, {
     opacity: 0,
     y: -4,
-    duration: 0.5,
+    duration: 0.45,
     ease: "power2.inOut",
     onComplete: () => {
       storyOverlay.classList.add('hidden');
@@ -313,17 +315,22 @@ function updateStoryText(progress) {
       hasAutoOpenedMenuAtEnd = true;
       setTimeout(() => {
         if (!menuOpen && !controls.enabled) {
+          isAutoMenu = true;
           openMenu();
         }
       }, 450);
     }
     return;
   } else if (progress < 0.90) {
-    // Reset auto-open flag if user scrolls back up into the journey
+    // Reset auto-open flag if user scrolls back into the journey
     hasAutoOpenedMenuAtEnd = false;
+    if (menuOpen && isAutoMenu) {
+      isAutoMenu = false;
+      closeMenu();
+    }
   }
 
-  // If user scrolls back to the very top after having completed landing:
+  // If user wraps or scrolls back to top after having started the journey:
   // Do NOT show welcome message again!
   if (progress <= 0.08 && hasCompletedInitialLanding) {
     if (storyOverlay && !storyOverlay.classList.contains('hidden')) {
@@ -359,52 +366,61 @@ function updateStoryText(progress) {
   if (!storyOverlay || !storyTag || !storyTitle || !storyDesc) return;
 
   clearTimeout(storyFadeTimeout);
-  storyOverlay.classList.remove('hidden');
 
   // Kill existing tweens on story elements to prevent jerking
   gsap.killTweensOf([storyOverlay, storyTag, storyTitle, storyDesc, storyPrompt]);
 
-  // Silky smooth cross-fade without layout shift or jerk
-  gsap.to([storyTag, storyTitle, storyDesc, storyPrompt], {
-    opacity: 0,
-    y: -5,
-    duration: 0.18,
-    ease: "power2.in",
-    onComplete: () => {
-      storyTag.textContent = beat.tag;
-      storyTitle.textContent = beat.title;
-      storyDesc.textContent = beat.desc;
+  const wasHidden = storyOverlay.classList.contains('hidden') || parseFloat(storyOverlay.style.opacity || '1') <= 0.05;
+  storyOverlay.classList.remove('hidden');
+  gsap.set(storyOverlay, { opacity: 1, y: 0 });
 
-      if (storyPrompt) {
-        if (beat.prompt) {
-          const promptSpan = storyPrompt.querySelector('span');
-          if (promptSpan) promptSpan.textContent = beat.prompt;
-          storyPrompt.style.display = 'inline-flex';
-        } else {
-          storyPrompt.style.display = 'none';
-        }
-      }
+  const renderContent = () => {
+    storyTag.textContent = beat.tag;
+    storyTitle.textContent = beat.title;
+    storyDesc.textContent = beat.desc;
 
-      gsap.fromTo(
-        [storyTag, storyTitle, storyDesc, storyPrompt],
-        { opacity: 0, y: 7 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.42,
-          stagger: 0.04,
-          ease: "power2.out"
-        }
-      );
-
-      // Auto-disappear after 4.2 seconds so it never lingers while user inspects!
-      if (activeBeatIndex > 0) {
-        storyFadeTimeout = setTimeout(() => {
-          hideStoryTemporarily();
-        }, 4200);
+    if (storyPrompt) {
+      if (beat.prompt) {
+        const promptSpan = storyPrompt.querySelector('span');
+        if (promptSpan) promptSpan.textContent = beat.prompt;
+        storyPrompt.style.display = 'inline-flex';
+      } else {
+        storyPrompt.style.display = 'none';
       }
     }
-  });
+
+    gsap.fromTo(
+      [storyTag, storyTitle, storyDesc, storyPrompt],
+      { opacity: 0, y: 8 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.44,
+        stagger: 0.04,
+        ease: "power2.out"
+      }
+    );
+
+    // Auto-disappear after 4.0 seconds so it never lingers while user inspects!
+    if (activeBeatIndex > 0) {
+      storyFadeTimeout = setTimeout(() => {
+        hideStoryTemporarily();
+      }, 4000);
+    }
+  };
+
+  if (wasHidden) {
+    renderContent();
+  } else {
+    // Silky smooth cross-fade when switching between visible beats
+    gsap.to([storyTag, storyTitle, storyDesc, storyPrompt], {
+      opacity: 0,
+      y: -5,
+      duration: 0.16,
+      ease: "power2.in",
+      onComplete: renderContent
+    });
+  }
 }
 
 // 2. Initialize Scroll Conductor
@@ -683,6 +699,7 @@ function closeMenu() {
 if (menuToggleBtn) {
   menuToggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    isAutoMenu = false;
     if (menuOpen) {
       closeMenu();
     } else {
@@ -694,6 +711,7 @@ if (menuToggleBtn) {
 // Close menu when clicking outside
 document.addEventListener('click', (e) => {
   if (menuOpen && !e.target.closest('.nav-menu-wrapper')) {
+    isAutoMenu = false;
     closeMenu();
   }
 });
