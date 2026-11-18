@@ -6,23 +6,29 @@ export function createClouds(scene) {
   masterCloudGroup.name = 'allClouds';
   scene.add(masterCloudGroup);
 
-  // Soft low-poly cloud materials
-  const cloudMaterial = new THREE.MeshStandardMaterial({
-    color: 0xfdfbf7,
-    roughness: 0.95,
+  // Soft low-poly cloud materials using MeshPhysicalMaterial with cotton sheen
+  const cloudMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xfbf8f4,
+    roughness: 0.9,
     metalness: 0.0,
     flatShading: true,
     transparent: true,
-    opacity: 0.78
+    opacity: 0.82,
+    sheen: 0.65,
+    sheenRoughness: 0.5,
+    sheenColor: new THREE.Color(0xffcbab) // warm peach sheen at sunset
   });
 
-  const cloudMatWarm = new THREE.MeshStandardMaterial({
-    color: 0xfff0df,
-    roughness: 0.92,
+  const cloudMatWarm = new THREE.MeshPhysicalMaterial({
+    color: 0xffe8d6,
+    roughness: 0.9,
     metalness: 0.0,
     flatShading: true,
     transparent: true,
-    opacity: 0.82
+    opacity: 0.85,
+    sheen: 0.7,
+    sheenRoughness: 0.5,
+    sheenColor: new THREE.Color(0xffcbab)
   });
 
   // Builder for fluffy faceted cloud cluster
@@ -34,7 +40,7 @@ export function createClouds(scene) {
     // Center puff
     const coreGeo = new THREE.DodecahedronGeometry(1.2 * scale, 1);
     const coreMesh = new THREE.Mesh(coreGeo, mat);
-    coreMesh.castShadow = true;
+    coreMesh.castShadow = false;
     coreMesh.receiveShadow = true;
     group.add(coreMesh);
 
@@ -43,7 +49,7 @@ export function createClouds(scene) {
       const puffRadius = (0.55 + Math.random() * 0.65) * scale;
       const puffGeo = new THREE.DodecahedronGeometry(puffRadius, 1);
       const puffMesh = new THREE.Mesh(puffGeo, mat);
-      puffMesh.castShadow = true;
+      puffMesh.castShadow = false;
       puffMesh.receiveShadow = true;
 
       const angle = (i / puffCount) * Math.PI * 2 + Math.random() * 0.3;
@@ -164,26 +170,38 @@ export function createClouds(scene) {
       cloudMaterial.color.setHex(0x28385a);
       cloudMaterial.emissive.setHex(0x1a2442);
       cloudMaterial.emissiveIntensity = 0.92;
+      cloudMaterial.sheenColor.setHex(0x789ad8); // pale blue sheen at night
+      cloudMaterial.sheen = 0.72;
 
       cloudMatWarm.color.setHex(0x32446e);
       cloudMatWarm.emissive.setHex(0x1a2442);
       cloudMatWarm.emissiveIntensity = 1.0;
+      cloudMatWarm.sheenColor.setHex(0x789ad8);
+      cloudMatWarm.sheen = 0.78;
     } else if (theme === 'sunset') {
       cloudMaterial.color.setHex(0xfbf8f4);
       cloudMaterial.emissive.setHex(0x000000);
       cloudMaterial.emissiveIntensity = 0.0;
+      cloudMaterial.sheenColor.setHex(0xffcbab); // pinkish-orange sheen at sunset
+      cloudMaterial.sheen = 0.65;
 
       cloudMatWarm.color.setHex(0xffe8d6);
       cloudMatWarm.emissive.setHex(0x000000);
       cloudMatWarm.emissiveIntensity = 0.0;
+      cloudMatWarm.sheenColor.setHex(0xffcbab);
+      cloudMatWarm.sheen = 0.7;
     } else {
       cloudMaterial.color.setHex(0xffffff);
       cloudMaterial.emissive.setHex(0x000000);
       cloudMaterial.emissiveIntensity = 0.0;
+      cloudMaterial.sheenColor.setHex(0xfff8f0); // soft warm-white sheen at daylight
+      cloudMaterial.sheen = 0.55;
 
       cloudMatWarm.color.setHex(0xf2f7ff);
       cloudMatWarm.emissive.setHex(0x000000);
       cloudMatWarm.emissiveIntensity = 0.0;
+      cloudMatWarm.sheenColor.setHex(0xfff8f0);
+      cloudMatWarm.sheen = 0.6;
     }
   }
 

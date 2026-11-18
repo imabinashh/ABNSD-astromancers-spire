@@ -475,6 +475,7 @@ themeBtns.forEach((btn) => {
         bgCloudMat.color.setHex(0x28385a);
         bgCloudMat.emissive.setHex(0x1a2442);
         bgCloudMat.emissiveIntensity = 0.85;
+        if (bgCloudMat.sheenColor) bgCloudMat.sheenColor.setHex(0x789ad8);
       }
       showToast('Midnight Leylines Activated');
     } else if (theme === 'sunset') {
@@ -482,6 +483,7 @@ themeBtns.forEach((btn) => {
         bgCloudMat.color.setHex(0xf5f0ee);
         bgCloudMat.emissive.setHex(0x000000);
         bgCloudMat.emissiveIntensity = 0.0;
+        if (bgCloudMat.sheenColor) bgCloudMat.sheenColor.setHex(0xffcbab);
       }
       showToast('Golden Sunset Hour');
     } else {
@@ -489,6 +491,7 @@ themeBtns.forEach((btn) => {
         bgCloudMat.color.setHex(0xffffff);
         bgCloudMat.emissive.setHex(0x000000);
         bgCloudMat.emissiveIntensity = 0.0;
+        if (bgCloudMat.sheenColor) bgCloudMat.sheenColor.setHex(0xfff8f0);
       }
       showToast('Radiant Daylight Activated');
     }

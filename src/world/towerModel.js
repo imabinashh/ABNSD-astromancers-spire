@@ -1,76 +1,113 @@
 import * as THREE from 'three';
+import { createProceduralNoiseTexture } from './proceduralTextures.js';
 
 export function createTowerModel() {
   const modelRoot = new THREE.Group();
   modelRoot.name = 'floatingIslandRoot';
 
+  // Lightweight 256x256 procedural clay/paper-craft noise texture
+  const noiseTex = createProceduralNoiseTexture(256);
+
   // Master materials with flatShading enabled for authentic low-poly aesthetic
   const materials = {
     grass: new THREE.MeshStandardMaterial({
-      color: 0x76a742,
-      roughness: 0.85,
-      metalness: 0.05,
+      color: 0xffffff,
+      vertexColors: true,
+      roughness: 0.9,
+      metalness: 0.02,
       flatShading: true
     }),
     rock: new THREE.MeshStandardMaterial({
-      color: 0x7a523a,
+      color: 0xffffff,
+      vertexColors: true,
       roughness: 0.9,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.04,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.02
     }),
     rockDark: new THREE.MeshStandardMaterial({
       color: 0x5a3c2a,
       roughness: 0.95,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.04,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.02
     }),
     stone: new THREE.MeshStandardMaterial({
       color: 0x9ea4ae,
       roughness: 0.85,
       metalness: 0.08,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     stoneDark: new THREE.MeshStandardMaterial({
       color: 0x7c818c,
       roughness: 0.9,
-      metalness: 0.1,
-      flatShading: true
+      metalness: 0.08,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     stoneLight: new THREE.MeshStandardMaterial({
       color: 0xb5bac3,
       roughness: 0.8,
       metalness: 0.05,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     wood: new THREE.MeshStandardMaterial({
       color: 0x754a2e,
       roughness: 0.75,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.04,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.018
     }),
     woodDark: new THREE.MeshStandardMaterial({
       color: 0x54331e,
       roughness: 0.8,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.04,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.018
     }),
     plaster: new THREE.MeshStandardMaterial({
       color: 0xf2e8d7,
       roughness: 0.85,
       metalness: 0.02,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.012
     }),
     roofSlate: new THREE.MeshStandardMaterial({
-      color: 0x3d4158,
-      roughness: 0.65,
-      metalness: 0.1,
-      flatShading: true
+      color: 0xffffff,
+      vertexColors: true,
+      roughness: 0.7,
+      metalness: 0.08,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     roofSlateTrim: new THREE.MeshStandardMaterial({
       color: 0x4e5370,
-      roughness: 0.6,
-      metalness: 0.15,
-      flatShading: true
+      roughness: 0.65,
+      metalness: 0.12,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     windowGlow: new THREE.MeshStandardMaterial({
       color: 0xffda55,
@@ -140,19 +177,118 @@ export function createTowerModel() {
   const islandGroup = new THREE.Group();
   islandGroup.name = 'islandBase';
 
-  // Grassy top plateau (faceted 16-sided cylinder)
+  // Grassy top plateau with concentric vertex rings for smooth ambient occlusion
   const islandRadius = 7.0;
-  const grassGeo = new THREE.CylinderGeometry(islandRadius, islandRadius + 0.2, 0.6, 18);
+  const radii = [0, 1.8, 2.6, 3.8, 5.4, 7.0];
+  const sectors = 22;
+  const grassVerts = [];
+  const grassColors = [];
+  const grassIndices = [];
+
+  const baseGrassCol = new THREE.Color(0x76a742);      // vibrant sunlit lime grass
+  const edgeGrassCol = new THREE.Color(0x86ba4c);      // sunlit outer perimeter rim
+  const wallOcclusionCol = new THREE.Color(0x324d1a);  // deep mossy green contact shadow near tower
+  const cauldronOcclusionCol = new THREE.Color(0x243b14); // rich dark contact shadow around boiling cauldron
+  const soilBevelCol = new THREE.Color(0x4a6325);      // side rim bevel moss-earth
+
+  // Center vertex (index 0)
+  grassVerts.push(0, 0.3, 0);
+  grassColors.push(wallOcclusionCol.r, wallOcclusionCol.g, wallOcclusionCol.b);
+
+  // Concentric Rings on top plateau surface
+  for (let rIdx = 1; rIdx < radii.length; rIdx++) {
+    const r = radii[rIdx];
+    for (let s = 0; s < sectors; s++) {
+      const theta = (s / sectors) * Math.PI * 2;
+      const x = Math.cos(theta) * r;
+      const z = Math.sin(theta) * r;
+      grassVerts.push(x, 0.3, z);
+
+      const col = baseGrassCol.clone();
+      const distTower = r;
+      const distCauldron = Math.hypot(x - 3.2, z - 1.2);
+
+      // 1. Contact shadow around tower base masonry
+      if (distTower < 3.2) {
+        const t = Math.max(0, Math.min(1, (distTower - 1.8) / 1.4));
+        col.lerp(wallOcclusionCol, (1 - t) * 0.72);
+      }
+      // 2. Contact shadow around & under bubbling cauldron
+      if (distCauldron < 1.8) {
+        const t = Math.max(0, Math.min(1, distCauldron / 1.8));
+        col.lerp(cauldronOcclusionCol, (1 - t) * 0.85);
+      }
+      // 3. Highlight outer perimeter sunlit rim
+      if (distTower > 5.5) {
+        const t = Math.min(1, (distTower - 5.5) / 1.5);
+        col.lerp(edgeGrassCol, t * 0.35);
+      }
+      grassColors.push(col.r, col.g, col.b);
+    }
+  }
+
+  // Ring 0 to Ring 1 center fan (counter-clockwise pointing up)
+  for (let s = 0; s < sectors; s++) {
+    const nextS = (s + 1) % sectors;
+    grassIndices.push(0, 1 + nextS, 1 + s);
+  }
+
+  // Intermediate concentric rings (counter-clockwise pointing up)
+  for (let rIdx = 1; rIdx < radii.length - 1; rIdx++) {
+    const innerStart = 1 + (rIdx - 1) * sectors;
+    const outerStart = 1 + rIdx * sectors;
+    for (let s = 0; s < sectors; s++) {
+      const nextS = (s + 1) % sectors;
+      const i0 = innerStart + s;
+      const i1 = innerStart + nextS;
+      const o0 = outerStart + s;
+      const o1 = outerStart + nextS;
+      grassIndices.push(i0, i1, o0);
+      grassIndices.push(i1, o1, o0);
+    }
+  }
+
+  // Side bevel ring (r = 7.2, y = -0.3)
+  const bevelStart = grassVerts.length / 3;
+  for (let s = 0; s < sectors; s++) {
+    const theta = (s / sectors) * Math.PI * 2;
+    grassVerts.push(Math.cos(theta) * 7.2, -0.3, Math.sin(theta) * 7.2);
+    grassColors.push(soilBevelCol.r, soilBevelCol.g, soilBevelCol.b);
+  }
+
+  // Outer ring to bevel quads (outward facing)
+  const outerPlateauStart = 1 + (radii.length - 2) * sectors;
+  for (let s = 0; s < sectors; s++) {
+    const nextS = (s + 1) % sectors;
+    const o0 = outerPlateauStart + s;
+    const o1 = outerPlateauStart + nextS;
+    const b0 = bevelStart + s;
+    const b1 = bevelStart + nextS;
+    grassIndices.push(o0, o1, b0);
+    grassIndices.push(o1, b1, b0);
+  }
+
+  const grassGeo = new THREE.BufferGeometry();
+  grassGeo.setAttribute('position', new THREE.Float32BufferAttribute(grassVerts, 3));
+  grassGeo.setAttribute('color', new THREE.Float32BufferAttribute(grassColors, 3));
+  grassGeo.setIndex(grassIndices);
+  grassGeo.computeVertexNormals();
+
   const grassMesh = new THREE.Mesh(grassGeo, materials.grass);
   grassMesh.position.y = -0.3;
   islandGroup.add(grassMesh);
 
-  // Underside faceted rocky stalactite cone
+  // Underside faceted rocky stalactite cone with vertical depth gradient
   const coneRadius = islandRadius + 0.15;
   const coneHeight = 6.8;
   const rockGeo = new THREE.ConeGeometry(coneRadius, coneHeight, 18, 6);
   // Displace rock vertices to make rugged crystalline facets
   const pos = rockGeo.attributes.position;
+  const rockColors = [];
+  const topRockCol = new THREE.Color(0x7a523a);    // warm terracotta rock at upper rim
+  const midRockCol = new THREE.Color(0x5a3c2a);    // rich umber stone
+  const bottomRockCol = new THREE.Color(0x382216); // deep dark basalt earth at stalactite tip
+
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
     if (y < coneHeight * 0.45) { // below top rim
@@ -164,7 +300,19 @@ export function createTowerModel() {
       pos.setZ(i, z * (1 + noise * 0.15));
       pos.setY(i, y + noise * 0.2);
     }
+
+    // Cone y spans from -coneHeight/2 (base) to +coneHeight/2 (tip)
+    // Note: rockMesh is rotated around X by Math.PI, so local +coneHeight/2 becomes bottom tip!
+    const tVertical = Math.max(0, Math.min(1, (y + coneHeight * 0.5) / coneHeight));
+    const rCol = new THREE.Color();
+    if (tVertical < 0.5) {
+      rCol.lerpColors(topRockCol, midRockCol, tVertical * 2.0);
+    } else {
+      rCol.lerpColors(midRockCol, bottomRockCol, (tVertical - 0.5) * 2.0);
+    }
+    rockColors.push(rCol.r, rCol.g, rCol.b);
   }
+  rockGeo.setAttribute('color', new THREE.Float32BufferAttribute(rockColors, 3));
   rockGeo.computeVertexNormals();
   const rockMesh = new THREE.Mesh(rockGeo, materials.rock);
   rockMesh.rotation.x = Math.PI; // point downwards
@@ -541,8 +689,14 @@ export function createTowerModel() {
   roofGroup.name = 'wizardRoof';
   roofGroup.position.y = 8.1; // Sits right above upper chamber
 
-  // Flared lower roof eave / brim (circular cone brim)
+  // Flared lower roof eave / brim (circular cone brim with warm slate vertex color)
   const roofBrimGeo = new THREE.CylinderGeometry(2.6, 3.8, 0.65, 14);
+  const brimColors = [];
+  const slateEavesCol = new THREE.Color(0x424a5e); // warm slate at eaves
+  for (let i = 0; i < roofBrimGeo.attributes.position.count; i++) {
+    brimColors.push(slateEavesCol.r, slateEavesCol.g, slateEavesCol.b);
+  }
+  roofBrimGeo.setAttribute('color', new THREE.Float32BufferAttribute(brimColors, 3));
   const roofBrim = new THREE.Mesh(roofBrimGeo, materials.roofSlate);
   roofBrim.position.y = 0.35;
   roofGroup.add(roofBrim);
@@ -555,7 +709,7 @@ export function createTowerModel() {
   roofGroup.add(brimTrim);
 
   // Curved Wizard Spire Loft
-  // Procedural segmented cone bending and curving smoothly into a crooked wizard tip!
+  // Procedural segmented cone bending into a crooked tip with painterly vertex color gradient
   const spireSegments = 12; // vertical rings
   const spireRadial = 10;   // low poly radial facets
   const spireHeight = 6.4;
@@ -569,7 +723,12 @@ export function createTowerModel() {
   );
 
   const spireVerts = [];
+  const spireColors = [];
+  const spireUVs = [];
   const spireIndices = [];
+
+  const midIndigoCol = new THREE.Color(0x2a2f48);   // deep transitional slate-indigo
+  const tipIndigoCol = new THREE.Color(0x16182e);   // deep mystical midnight indigo at crooked tip
 
   for (let j = 0; j <= spireSegments; j++) {
     const t = j / spireSegments;
@@ -584,6 +743,15 @@ export function createTowerModel() {
     // Radius tapers from 2.5 down to 0.08 at the tip
     const r = Math.max(0.06, 2.55 * Math.pow(1 - t, 0.88));
 
+    // Calculate vertex color gradient along vertical height t
+    const tCol = Math.pow(t, 0.82);
+    const ringCol = new THREE.Color();
+    if (tCol < 0.5) {
+      ringCol.lerpColors(slateEavesCol, midIndigoCol, tCol * 2.0);
+    } else {
+      ringCol.lerpColors(midIndigoCol, tipIndigoCol, (tCol - 0.5) * 2.0);
+    }
+
     for (let i = 0; i < spireRadial; i++) {
       const theta = (i / spireRadial) * Math.PI * 2;
       const xOffset = (Math.cos(theta) * normal.x + Math.sin(theta) * binormal.x) * r;
@@ -591,6 +759,8 @@ export function createTowerModel() {
       const zOffset = (Math.cos(theta) * normal.z + Math.sin(theta) * binormal.z) * r;
 
       spireVerts.push(center.x + xOffset, center.y + yOffset, center.z + zOffset);
+      spireColors.push(ringCol.r, ringCol.g, ringCol.b);
+      spireUVs.push(i / spireRadial, t);
     }
   }
 
@@ -615,6 +785,9 @@ export function createTowerModel() {
   const tipCenter = spireCurve.getPoint(1.0);
   const tipIndex = spireVerts.length / 3;
   spireVerts.push(tipCenter.x - 0.2, tipCenter.y + 0.35, tipCenter.z + 0.15);
+  spireColors.push(tipIndigoCol.r, tipIndigoCol.g, tipIndigoCol.b);
+  spireUVs.push(0.5, 1.0);
+
   const lastRingStart = spireSegments * spireRadial;
   for (let i = 0; i < spireRadial; i++) {
     const nextI = (i + 1) % spireRadial;
@@ -623,6 +796,8 @@ export function createTowerModel() {
 
   const spireGeo = new THREE.BufferGeometry();
   spireGeo.setAttribute('position', new THREE.Float32BufferAttribute(spireVerts, 3));
+  spireGeo.setAttribute('color', new THREE.Float32BufferAttribute(spireColors, 3));
+  spireGeo.setAttribute('uv', new THREE.Float32BufferAttribute(spireUVs, 2));
   spireGeo.setIndex(spireIndices);
   spireGeo.computeVertexNormals();
 
@@ -641,6 +816,11 @@ export function createTowerModel() {
 
   // Dormer pitched roof
   const dormerRoofGeo = new THREE.ConeGeometry(0.65, 0.5, 4);
+  const dormerRoofColors = [];
+  for (let i = 0; i < dormerRoofGeo.attributes.position.count; i++) {
+    dormerRoofColors.push(slateEavesCol.r, slateEavesCol.g, slateEavesCol.b);
+  }
+  dormerRoofGeo.setAttribute('color', new THREE.Float32BufferAttribute(dormerRoofColors, 3));
   const dormerRoof = new THREE.Mesh(dormerRoofGeo, materials.roofSlate);
   dormerRoof.rotation.y = Math.PI * 0.25;
   dormerRoof.position.set(0, 0.55, 0);

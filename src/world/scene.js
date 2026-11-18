@@ -43,13 +43,16 @@ export function createScene(canvas) {
   // 5. Stylized Floating Low-Poly Clouds in Background
   const cloudGroup = new THREE.Group();
   cloudGroup.name = 'backgroundClouds';
-  const cloudMat = new THREE.MeshStandardMaterial({
+  const cloudMat = new THREE.MeshPhysicalMaterial({
     color: 0xf5f0ee,
     roughness: 0.9,
     metalness: 0.0,
     flatShading: true,
     transparent: true,
-    opacity: 0.75
+    opacity: 0.75,
+    sheen: 0.6,
+    sheenRoughness: 0.5,
+    sheenColor: new THREE.Color(0xffcbab)
   });
 
   function createCloud(scale = 1.0) {

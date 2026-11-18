@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createProceduralNoiseTexture } from './proceduralTextures.js';
 
 // Satellite Islands:
 // 1. Left Island: The Alchemist's Pumpkin Grove with Gnarled Tree & Hanging Lantern,
@@ -10,51 +11,77 @@ export function createSatelliteIslands(scene) {
   masterGroup.name = 'satelliteArchipelago';
   scene.add(masterGroup);
 
+  // Lightweight 256x256 procedural clay/paper-craft noise texture
+  const noiseTex = createProceduralNoiseTexture(256);
+
   // Common Low-Poly Materials (flatShading enabled)
   const mats = {
     grass: new THREE.MeshStandardMaterial({
-      color: 0x74a540,
-      roughness: 0.85,
-      metalness: 0.05,
+      color: 0xffffff,
+      vertexColors: true,
+      roughness: 0.9,
+      metalness: 0.02,
       flatShading: true
     }),
     rock: new THREE.MeshStandardMaterial({
-      color: 0x785038,
+      color: 0xffffff,
+      vertexColors: true,
       roughness: 0.9,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.04,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.02
     }),
     rockDark: new THREE.MeshStandardMaterial({
       color: 0x583a28,
       roughness: 0.95,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.02
     }),
     wood: new THREE.MeshStandardMaterial({
       color: 0x82502e,
       roughness: 0.75,
-      metalness: 0.05,
-      flatShading: true
+      metalness: 0.04,
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.016
     }),
     woodDark: new THREE.MeshStandardMaterial({
       color: 0x56341e,
       roughness: 0.8,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.016
     }),
     woodPlank: new THREE.MeshStandardMaterial({
       color: 0xa86e42,
       roughness: 0.7,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.016
     }),
     stone: new THREE.MeshStandardMaterial({
       color: 0x9ea4ae,
       roughness: 0.85,
       metalness: 0.08,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     stoneLight: new THREE.MeshStandardMaterial({
       color: 0xbac0ca,
       roughness: 0.8,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.015
     }),
     pumpkinOrange: new THREE.MeshStandardMaterial({
       color: 0xee661c,
@@ -83,18 +110,27 @@ export function createSatelliteIslands(scene) {
       color: 0x1d8a7d,
       roughness: 0.55,
       metalness: 0.1,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.014
     }),
     tealRoofTrim: new THREE.MeshStandardMaterial({
       color: 0x2bb0a0,
       roughness: 0.5,
       metalness: 0.15,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.014
     }),
     cottageWall: new THREE.MeshStandardMaterial({
       color: 0xb67548,
       roughness: 0.8,
-      flatShading: true
+      flatShading: true,
+      roughnessMap: noiseTex,
+      bumpMap: noiseTex,
+      bumpScale: 0.014
     }),
     goldBrass: new THREE.MeshStandardMaterial({
       color: 0xe2a838,
@@ -125,13 +161,89 @@ export function createSatelliteIslands(scene) {
   function createIslandBase(radius, coneHeight, segments = 14) {
     const group = new THREE.Group();
 
-    // 1. Grassy Top Plateau
-    const grassGeo = new THREE.CylinderGeometry(radius, radius * 1.03, 0.45, segments);
+    // 1. Grassy Top Plateau with concentric vertex rings for smooth ambient occlusion
+    const radii = [0, radius * 0.4, radius * 0.7, radius];
+    const sectors = segments;
+    const grassVerts = [];
+    const grassColors = [];
+    const grassIndices = [];
+
+    const baseGrassCol = new THREE.Color(0x74a540);
+    const edgeGrassCol = new THREE.Color(0x86ba4c);
+    const centerAOCol = new THREE.Color(0x425e24);
+    const bevelCol = new THREE.Color(0x4a6325);
+
+    // Center vertex (index 0)
+    grassVerts.push(0, 0.225, 0);
+    grassColors.push(centerAOCol.r, centerAOCol.g, centerAOCol.b);
+
+    for (let rIdx = 1; rIdx < radii.length; rIdx++) {
+      const r = radii[rIdx];
+      for (let s = 0; s < sectors; s++) {
+        const theta = (s / sectors) * Math.PI * 2;
+        const x = Math.cos(theta) * r;
+        const z = Math.sin(theta) * r;
+        grassVerts.push(x, 0.225, z);
+
+        const tNorm = r / radius;
+        const col = new THREE.Color();
+        col.lerpColors(centerAOCol, edgeGrassCol, Math.pow(tNorm, 0.75));
+        grassColors.push(col.r, col.g, col.b);
+      }
+    }
+
+    // Center fan (counter-clockwise pointing up)
+    for (let s = 0; s < sectors; s++) {
+      const nextS = (s + 1) % sectors;
+      grassIndices.push(0, 1 + nextS, 1 + s);
+    }
+
+    // Intermediate ring quads (counter-clockwise pointing up)
+    for (let rIdx = 1; rIdx < radii.length - 1; rIdx++) {
+      const innerStart = 1 + (rIdx - 1) * sectors;
+      const outerStart = 1 + rIdx * sectors;
+      for (let s = 0; s < sectors; s++) {
+        const nextS = (s + 1) % sectors;
+        const i0 = innerStart + s;
+        const i1 = innerStart + nextS;
+        const o0 = outerStart + s;
+        const o1 = outerStart + nextS;
+        grassIndices.push(i0, i1, o0);
+        grassIndices.push(i1, o1, o0);
+      }
+    }
+
+    // Side bevel ring
+    const bevelStart = grassVerts.length / 3;
+    for (let s = 0; s < sectors; s++) {
+      const theta = (s / sectors) * Math.PI * 2;
+      grassVerts.push(Math.cos(theta) * (radius * 1.03), -0.225, Math.sin(theta) * (radius * 1.03));
+      grassColors.push(bevelCol.r, bevelCol.g, bevelCol.b);
+    }
+
+    // Outer plateau to bevel quads (outward facing)
+    const outerPlateauStart = 1 + (radii.length - 2) * sectors;
+    for (let s = 0; s < sectors; s++) {
+      const nextS = (s + 1) % sectors;
+      const o0 = outerPlateauStart + s;
+      const o1 = outerPlateauStart + nextS;
+      const b0 = bevelStart + s;
+      const b1 = bevelStart + nextS;
+      grassIndices.push(o0, o1, b0);
+      grassIndices.push(o1, b1, b0);
+    }
+
+    const grassGeo = new THREE.BufferGeometry();
+    grassGeo.setAttribute('position', new THREE.Float32BufferAttribute(grassVerts, 3));
+    grassGeo.setAttribute('color', new THREE.Float32BufferAttribute(grassColors, 3));
+    grassGeo.setIndex(grassIndices);
+    grassGeo.computeVertexNormals();
+
     const grassMesh = new THREE.Mesh(grassGeo, mats.grass);
     grassMesh.position.y = -0.225;
     group.add(grassMesh);
 
-    // 2. Faceted Stalactite Rocky Crag Underside
+    // 2. Faceted Stalactite Rocky Crag Underside with vertical depth gradient
     const rockGeo = new THREE.ConeGeometry(radius * 1.02, coneHeight, segments, 5);
     const pos = rockGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -146,6 +258,24 @@ export function createSatelliteIslands(scene) {
         pos.setY(i, y + noise * 0.15);
       }
     }
+
+    const rockColors = [];
+    const topRockCol = new THREE.Color(0x785038);    // warm terracotta rock near rim
+    const midRockCol = new THREE.Color(0x543625);    // deeper umber rock
+    const bottomRockCol = new THREE.Color(0x321e14); // dark basalt stalactite tip
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      // Cone is inverted: local +coneHeight/2 becomes bottom tip after rotation.x = Math.PI
+      const tVertical = Math.max(0, Math.min(1, (y + coneHeight * 0.5) / coneHeight));
+      const rCol = new THREE.Color();
+      if (tVertical < 0.5) {
+        rCol.lerpColors(topRockCol, midRockCol, tVertical * 2.0);
+      } else {
+        rCol.lerpColors(midRockCol, bottomRockCol, (tVertical - 0.5) * 2.0);
+      }
+      rockColors.push(rCol.r, rCol.g, rCol.b);
+    }
+    rockGeo.setAttribute('color', new THREE.Float32BufferAttribute(rockColors, 3));
     rockGeo.computeVertexNormals();
     const rockMesh = new THREE.Mesh(rockGeo, mats.rock);
     rockMesh.rotation.x = Math.PI; // point downwards
