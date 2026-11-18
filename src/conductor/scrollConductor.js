@@ -55,21 +55,9 @@ export function createScrollConductor(options = {}) {
   // Seamless scroll wrap on wheel (Desktop / Trackpad)
   function onWheel(e) {
     resetIdle();
-    if (manualOverride) return;
-
-    const max = getMaxScroll();
-    const currentY = getScrollY();
-
-    // If at the very bottom and scrolling down: seamlessly wrap to top!
-    if (e.deltaY > 0 && currentY >= max - 3) {
-      window.scrollTo({ top: 3, behavior: 'instant' });
-      smoothProgress = 0.0;
-      exactProgress = 0.0;
-      measure();
-    }
   }
 
-  // Mobile Touch tracking for seamless loop & responsiveness
+  // Mobile Touch tracking for responsiveness
   let touchStartY = 0;
   function onTouchStart(e) {
     resetIdle();
@@ -81,20 +69,6 @@ export function createScrollConductor(options = {}) {
   function onTouchMove(e) {
     resetIdle();
     if (manualOverride || !e.touches || e.touches.length === 0) return;
-
-    const currentTouchY = e.touches[0].clientY;
-    const dy = touchStartY - currentTouchY; // positive = dragging up / scrolling down
-    const max = getMaxScroll();
-    const currentY = getScrollY();
-
-    // If reaching bottom and swiping up (scrolling down): wrap to top seamlessly!
-    if (dy > 0 && currentY >= max - 4) {
-      window.scrollTo({ top: 4, behavior: 'instant' });
-      smoothProgress = 0.0;
-      exactProgress = 0.0;
-      measure();
-      touchStartY = currentTouchY;
-    }
   }
 
   function update() {

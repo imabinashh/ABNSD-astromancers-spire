@@ -1094,6 +1094,28 @@ body.mode-free-orbit .story-overlay {
   animation: promptPulse 2.4s ease-in-out infinite;
 }
 
+/* Day Theme Specific Typography (Deep Slate-Indigo matching the Wizard Hat Roof) */
+body.theme-day .story-title {
+  color: #1c2238;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 0 16px rgba(255, 255, 255, 0.85);
+}
+
+body.theme-day .story-desc {
+  color: #2b334d;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9), 0 0 12px rgba(255, 255, 255, 0.8);
+}
+
+body.theme-day .story-tag {
+  color: #8c5e12;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
+body.theme-day .story-prompt {
+  color: #0b6865;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
+}
+
 @keyframes promptPulse {
   0%, 100% { opacity: 0.55; transform: translateY(0); }
   50% { opacity: 1; transform: translateY(3px); }

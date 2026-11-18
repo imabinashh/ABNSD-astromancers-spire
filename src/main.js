@@ -225,60 +225,69 @@ function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark
   });
 }
 
-// Pure Floating Storytelling Chapters (Mapped to 360° Spire Orbit & Island Expedition)
+// State tracking for journey progress and end-of-scroll actions
+let hasCompletedInitialLanding = false;
+let hasAutoOpenedMenuAtEnd = false;
+let storyFadeTimeout = null;
+
+// Pure Floating Storytelling Chapters (Mapped to slow reading plateaus & islands)
 const storyBeats = [
   {
-    range: [0.00, 0.09],
+    id: 'welcome',
+    range: [0.00, 0.08],
     tag: "THE CELESTIAL SANCTUARY",
     title: "Welcome, Traveler",
     desc: "A quiet sanctuary of ancient starcraft floating high above the clouds.",
     prompt: "Scroll down to embark"
   },
   {
-    range: [0.09, 0.23],
+    id: 'spire',
+    range: [0.09, 0.22],
     tag: "HEART OF THE SANCTUARY",
     title: "The Astromancer's Spire",
     desc: "Ancient stone masonry and simmering potion draughts guard the celestial leylines.",
     prompt: ""
   },
   {
-    range: [0.23, 0.35],
+    id: 'chimney',
+    range: [0.34, 0.43],
     tag: "THE WIZARD'S HEARTH",
     title: "Chimney & Whispering Mists",
     desc: "Drifting hearth smoke ascends from the crooked slate roof into the peaceful mountain sky.",
     prompt: ""
   },
   {
-    range: [0.35, 0.46],
-    tag: "THE TIMBER OBSERVATORY",
-    title: "Rafters of the North",
-    desc: "Cantilevered wooden study beams peer through quiet pine trees toward the rope bridge.",
-    prompt: ""
-  },
-  {
-    range: [0.46, 0.65],
+    id: 'pumpkin',
+    range: [0.63, 0.72],
     tag: "THE ALCHEMIST'S GARDEN",
     title: "Pumpkin Grove",
     desc: "Glowing autumn gourds rest upon stone pedestals beneath the silent lantern crane.",
     prompt: ""
   },
   {
-    range: [0.65, 0.88],
+    id: 'cottage',
+    range: [0.86, 0.94],
     tag: "THE APPRENTICE'S WATCH",
     title: "Cottage Outpost",
     desc: "Across floating stepping stones, the turquoise belfry lantern keeps watch over the quiet void.",
-    prompt: ""
-  },
-  {
-    range: [0.88, 1.00],
-    tag: "THE SANCTUARY AT PEACE",
-    title: "Harmony in the Clouds",
-    desc: "The floating archipelago rests in eternal balance. Switch to Free Orbit anytime to explore.",
     prompt: ""
   }
 ];
 
 let currentBeatIndex = -1;
+
+function hideStoryTemporarily() {
+  if (!storyOverlay || storyOverlay.classList.contains('hidden')) return;
+  gsap.to(storyOverlay, {
+    opacity: 0,
+    y: -4,
+    duration: 0.5,
+    ease: "power2.inOut",
+    onComplete: () => {
+      storyOverlay.classList.add('hidden');
+    }
+  });
+}
 
 function updateStoryText(progress) {
   if (controls.enabled || waypointMode) {
@@ -288,27 +297,72 @@ function updateStoryText(progress) {
     return;
   }
 
-  if (storyOverlay && storyOverlay.classList.contains('hidden')) {
-    storyOverlay.classList.remove('hidden');
+  // Once user scrolls past initial overview, mark that journey has started
+  if (progress > 0.08) {
+    hasCompletedInitialLanding = true;
   }
 
-  let beatIndex = 0;
+  // When completing the scroll (reaching overview pullback at the end):
+  // 1. Do NOT show welcome message again!
+  // 2. Open navigation menu automatically so user can see menu items and choose!
+  if (progress >= 0.96) {
+    if (storyOverlay && !storyOverlay.classList.contains('hidden')) {
+      storyOverlay.classList.add('hidden');
+    }
+    if (hasCompletedInitialLanding && !hasAutoOpenedMenuAtEnd) {
+      hasAutoOpenedMenuAtEnd = true;
+      setTimeout(() => {
+        if (!menuOpen && !controls.enabled) {
+          openMenu();
+        }
+      }, 450);
+    }
+    return;
+  } else if (progress < 0.90) {
+    // Reset auto-open flag if user scrolls back up into the journey
+    hasAutoOpenedMenuAtEnd = false;
+  }
+
+  // If user scrolls back to the very top after having completed landing:
+  // Do NOT show welcome message again!
+  if (progress <= 0.08 && hasCompletedInitialLanding) {
+    if (storyOverlay && !storyOverlay.classList.contains('hidden')) {
+      storyOverlay.classList.add('hidden');
+    }
+    return;
+  }
+
+  // Find active beat for current progress
+  let activeBeatIndex = -1;
   for (let i = 0; i < storyBeats.length; i++) {
     const [min, max] = storyBeats[i].range;
-    if (progress >= min && (progress < max || i === storyBeats.length - 1)) {
-      beatIndex = i;
+    if (progress >= min && progress <= max) {
+      activeBeatIndex = i;
       break;
     }
   }
 
-  if (beatIndex === currentBeatIndex) return;
-  currentBeatIndex = beatIndex;
-  const beat = storyBeats[beatIndex];
+  // If in a transition zone between landmarks (e.g. while revolving around the back/flank)
+  if (activeBeatIndex === -1) {
+    if (currentBeatIndex !== -1) {
+      currentBeatIndex = -1;
+      clearTimeout(storyFadeTimeout);
+      hideStoryTemporarily();
+    }
+    return;
+  }
+
+  if (activeBeatIndex === currentBeatIndex) return;
+  currentBeatIndex = activeBeatIndex;
+  const beat = storyBeats[activeBeatIndex];
 
   if (!storyOverlay || !storyTag || !storyTitle || !storyDesc) return;
 
+  clearTimeout(storyFadeTimeout);
+  storyOverlay.classList.remove('hidden');
+
   // Kill existing tweens on story elements to prevent jerking
-  gsap.killTweensOf([storyTag, storyTitle, storyDesc, storyPrompt]);
+  gsap.killTweensOf([storyOverlay, storyTag, storyTitle, storyDesc, storyPrompt]);
 
   // Silky smooth cross-fade without layout shift or jerk
   gsap.to([storyTag, storyTitle, storyDesc, storyPrompt], {
@@ -342,6 +396,13 @@ function updateStoryText(progress) {
           ease: "power2.out"
         }
       );
+
+      // Auto-disappear after 4.2 seconds so it never lingers while user inspects!
+      if (activeBeatIndex > 0) {
+        storyFadeTimeout = setTimeout(() => {
+          hideStoryTemporarily();
+        }, 4200);
+      }
     }
   });
 }
@@ -573,6 +634,9 @@ function resetCameraView() {
   conductor.setProgress(0.0, false);
   window.scrollTo({ top: 0, behavior: 'instant' });
   currentBeatIndex = -1;
+  hasCompletedInitialLanding = false;
+  hasAutoOpenedMenuAtEnd = false;
+  clearTimeout(storyFadeTimeout);
   if (storyOverlay) {
     storyOverlay.classList.remove('hidden');
   }
