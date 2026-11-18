@@ -26,7 +26,8 @@ const menuOrbitBtn = document.getElementById('menu-orbit-btn');
 
 // Top-Right Controls DOM
 const themeBtns = document.querySelectorAll('.theme-pill-btn');
-const cameraOrbitBtn = document.getElementById('camera-orbit-btn');
+const modeScrollBtn = document.getElementById('mode-scroll-btn');
+const modeOrbitBtn = document.getElementById('mode-orbit-btn');
 const audioToggleBtn = document.getElementById('audio-toggle-btn');
 const soundIconOn = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-on') : null;
 const soundIconOff = audioToggleBtn ? audioToggleBtn.querySelector('.sound-icon-off') : null;
@@ -58,12 +59,14 @@ const rainbow = createRainbow(scene);
 const cameraTrack = createCameraTrack();
 const audio = createSynthAudio();
 
-// Initialize lighting, celestial & archipelago to default Sunset atmosphere
-lighting.applyPreset('sunset', 0);
-celestial.setTheme('sunset');
-satelliteIslands.setTheme('sunset');
-clouds.setTheme('sunset', 0);
-rainbow.setTheme('sunset', 0);
+// Initialize lighting, celestial & archipelago to default Radiant Day atmosphere
+lighting.applyPreset('day', 0);
+celestial.setTheme('day');
+satelliteIslands.setTheme('day');
+clouds.setTheme('day', 0);
+rainbow.setTheme('day', 0);
+document.body.classList.remove('theme-sunset', 'theme-night');
+document.body.classList.add('theme-day');
 
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
@@ -161,9 +164,6 @@ function showToast(text) {
 
 // Fly smoothly to landmark with GSAP cubic power2.inOut easing
 function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark') {
-  if (controls.enabled) {
-    disableFreeOrbit();
-  }
   stopFlightTweens();
 
   waypointMode = true;
@@ -184,8 +184,13 @@ function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark
     z: camPos.z,
     duration: 1.4,
     ease: "power2.inOut",
+    onUpdate: () => {
+      camera.position.copy(currentCamPos);
+      if (controls.enabled) controls.update();
+    },
     onComplete: () => {
       isFlightActive = false;
+      if (controls.enabled) controls.update();
     }
   });
 
@@ -194,7 +199,13 @@ function flyToWaypoint(camPos, targetPos, fov, toastText, waypointId = 'landmark
     y: targetPos.y,
     z: targetPos.z,
     duration: 1.4,
-    ease: "power2.inOut"
+    ease: "power2.inOut",
+    onUpdate: () => {
+      if (controls.enabled) {
+        controls.target.copy(currentCamTarget);
+        controls.update();
+      }
+    }
   });
 
   const adaptiveFov = getAdaptiveFOV(fov, camera.aspect);
@@ -300,24 +311,23 @@ window.addEventListener('touchmove', () => {
   }
 }, { passive: true });
 
-function updateCameraBtnText(isOrbit) {
-  if (!cameraOrbitBtn) return;
-  const textEl = cameraOrbitBtn.querySelector('.camera-btn-text');
-  if (!textEl) return;
-  const isMobile = window.innerWidth <= 640;
-  if (isOrbit) {
-    textEl.textContent = isMobile ? 'Scroll' : 'Guided Scroll';
-  } else {
-    textEl.textContent = isMobile ? 'Orbit' : 'Free Orbit';
+function updateCameraModeUI(isOrbit) {
+  if (modeScrollBtn) {
+    modeScrollBtn.classList.toggle('active', !isOrbit);
+    modeScrollBtn.setAttribute('aria-checked', String(!isOrbit));
+  }
+  if (modeOrbitBtn) {
+    modeOrbitBtn.classList.toggle('active', isOrbit);
+    modeOrbitBtn.setAttribute('aria-checked', String(isOrbit));
+  }
+  if (menuOrbitBtn) {
+    menuOrbitBtn.textContent = isOrbit ? 'Guided Scroll' : 'Free Orbit';
+    menuOrbitBtn.classList.toggle('active', isOrbit);
   }
 }
 
-window.addEventListener('resize', () => {
-  updateCameraBtnText(controls.enabled);
-});
-
 // 3. Free Orbit Mode Toggle
-function enableFreeOrbit() {
+function enableFreeOrbit(silent = false) {
   stopFlightTweens();
   controls.enabled = true;
   conductor.setManualOverride(true);
@@ -326,17 +336,14 @@ function enableFreeOrbit() {
   if (cameraControlsHud) {
     cameraControlsHud.classList.remove('hidden');
   }
-  if (cameraOrbitBtn) {
-    cameraOrbitBtn.classList.add('active');
-    updateCameraBtnText(true);
-  }
-  if (menuOrbitBtn) {
-    menuOrbitBtn.textContent = 'Guided Scroll';
-    menuOrbitBtn.classList.add('active');
+  updateCameraModeUI(true);
+  if (!silent) {
+    showToast('Free Orbit Active • Drag to inspect 360°');
+    audio.playTinkle();
   }
 }
 
-function disableFreeOrbit() {
+function disableFreeOrbit(silent = false) {
   stopFlightTweens();
   controls.enabled = false;
   conductor.setManualOverride(false);
@@ -344,37 +351,39 @@ function disableFreeOrbit() {
   if (cameraControlsHud) {
     cameraControlsHud.classList.add('hidden');
   }
-  if (cameraOrbitBtn) {
-    cameraOrbitBtn.classList.remove('active');
-    updateCameraBtnText(false);
+  updateCameraModeUI(false);
+  if (!silent) {
+    showToast('Guided Scroll Active');
+    audio.playTinkle();
   }
-  if (menuOrbitBtn) {
-    menuOrbitBtn.textContent = 'Free Orbit';
-    menuOrbitBtn.classList.remove('active');
-  }
-}
-
-if (cameraOrbitBtn) {
-  cameraOrbitBtn.addEventListener('click', () => {
-    toggleFreeOrbit();
-  });
 }
 
 function toggleFreeOrbit() {
   if (controls.enabled) {
     disableFreeOrbit();
-    showToast('Guided Scroll Active');
   } else {
     enableFreeOrbit();
-    showToast('Free Orbit Active • Drag to inspect 360°');
   }
+}
+
+if (modeScrollBtn) {
+  modeScrollBtn.addEventListener('click', () => {
+    if (controls.enabled) disableFreeOrbit();
+  });
+}
+
+if (modeOrbitBtn) {
+  modeOrbitBtn.addEventListener('click', () => {
+    if (!controls.enabled) enableFreeOrbit();
+  });
 }
 
 // Camera HUD Controls with silky GSAP easing
 function zoomCamera(factor) {
-  if (!controls.enabled) enableFreeOrbit();
+  if (!controls.enabled) enableFreeOrbit(true);
   resetUserIdle();
   conductor.resetIdle();
+  audio.playTinkle();
   const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
   const targetOffset = offset.clone().multiplyScalar(factor);
   const dist = targetOffset.length();
@@ -394,9 +403,10 @@ function zoomCamera(factor) {
 }
 
 function rotateCamera(angle) {
-  if (!controls.enabled) enableFreeOrbit();
+  if (!controls.enabled) enableFreeOrbit(true);
   resetUserIdle();
   conductor.resetIdle();
+  audio.playTinkle();
   const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
   offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
   const targetX = controls.target.x + offset.x;
@@ -413,9 +423,7 @@ function rotateCamera(angle) {
 }
 
 function resetCameraView() {
-  if (controls.enabled) {
-    disableFreeOrbit();
-  }
+  audio.playTinkle();
   flyToWaypoint(
     new THREE.Vector3(10.0, 10.8, 32.5),
     new THREE.Vector3(0, 5.2, 0),
@@ -513,6 +521,36 @@ function closeAboutModal() {
   }
 }
 
+// Helper to focus any island dynamically with GSAP
+function focusIsland(islandId) {
+  audio.playTinkle();
+  if (islandId === 'pumpkin') {
+    flyToWaypoint(
+      new THREE.Vector3(-19.0, 8.0, 17.0),
+      new THREE.Vector3(-15.5, 4.2, 5.5),
+      38,
+      "Pumpkin Grove • The Alchemist's Garden",
+      'pumpkin'
+    );
+  } else if (islandId === 'cottage') {
+    flyToWaypoint(
+      new THREE.Vector3(20.0, 8.6, 7.0),
+      new THREE.Vector3(16.5, 4.8, -4.5),
+      38,
+      "Cottage Outpost • The Apprentice's Watch",
+      'cottage'
+    );
+  } else {
+    flyToWaypoint(
+      new THREE.Vector3(10.0, 10.8, 32.5),
+      new THREE.Vector3(0.0, 5.2, 0.0),
+      42,
+      "The Sanctuary • Full Archipelago View",
+      'sanctuary'
+    );
+  }
+}
+
 // Menu Pill Item Actions
 menuPillBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -522,37 +560,17 @@ menuPillBtns.forEach(btn => {
     closeMenu();
 
     if (target === 'sanctuary') {
-      flyToWaypoint(
-        new THREE.Vector3(10.0, 10.8, 32.5),
-        new THREE.Vector3(0, 5.2, 0),
-        42,
-        'The Sanctuary • Full Archipelago View',
-        'sanctuary'
-      );
+      focusIsland('sanctuary');
       conductor.setProgress(0.0, false);
       window.scrollTo({ top: 0, behavior: 'instant' });
-      audio.playChime();
     } else if (target === 'pumpkin') {
-      flyToWaypoint(
-        new THREE.Vector3(-6.2, 3.8, 14.2),
-        new THREE.Vector3(-11.5, 0.8, 5.0),
-        40,
-        'Pumpkin Grove • The Alchemist\'s Garden',
-        'pumpkin'
-      );
-      audio.playBubble();
+      focusIsland('pumpkin');
     } else if (target === 'cottage') {
-      flyToWaypoint(
-        new THREE.Vector3(17.8, 4.2, 5.2),
-        new THREE.Vector3(11.5, 1.4, -4.5),
-        38,
-        'Cottage Outpost • The Apprentice\'s Watch',
-        'cottage'
-      );
-      audio.playChime();
+      focusIsland('cottage');
     } else if (target === 'orbit') {
       toggleFreeOrbit();
     } else if (target === 'about') {
+      audio.playTinkle();
       openAboutModal();
     }
   });
@@ -561,6 +579,7 @@ menuPillBtns.forEach(btn => {
 // About Modal Event Listeners
 if (modalCloseBtn) {
   modalCloseBtn.addEventListener('click', () => {
+    audio.playTinkle();
     closeAboutModal();
   });
 }
@@ -568,6 +587,7 @@ if (modalCloseBtn) {
 if (aboutModal) {
   aboutModal.addEventListener('click', (e) => {
     if (e.target === aboutModal) {
+      audio.playTinkle();
       closeAboutModal();
     }
   });
@@ -579,6 +599,7 @@ themeBtns.forEach((btn) => {
     const theme = btn.getAttribute('data-theme');
     themeBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    audio.playTinkle();
 
     // Update body class for CSS gradient backdrop
     document.body.classList.remove('theme-sunset', 'theme-night', 'theme-day');
@@ -623,8 +644,6 @@ themeBtns.forEach((btn) => {
       }
       showToast('Radiant Daylight Activated');
     }
-
-    audio.playChime();
   });
 });
 
@@ -648,10 +667,41 @@ if (audioToggleBtn) {
   });
 }
 
-// 7. Raycasting & Interactive Hotspots on Click/Tap
+// 7. Smart Canvas Drag Detection & Interactive 3D Island Focus
+let pointerStartPos = { x: 0, y: 0 };
+let isPointerDown = false;
+let hasDragged = false;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 
+canvas.addEventListener('pointerdown', (e) => {
+  pointerStartPos = { x: e.clientX, y: e.clientY };
+  isPointerDown = true;
+  hasDragged = false;
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!isPointerDown) return;
+  const dist = Math.hypot(e.clientX - pointerStartPos.x, e.clientY - pointerStartPos.y);
+  if (dist > 6) {
+    hasDragged = true;
+    // Seamlessly auto-engage Free Orbit when a user clicks & drags on canvas!
+    if (!controls.enabled) {
+      enableFreeOrbit(false);
+    }
+  }
+});
+
+canvas.addEventListener('pointerup', () => {
+  isPointerDown = false;
+});
+
+// Double-click on canvas resets camera view to full archipelago overview
+canvas.addEventListener('dblclick', () => {
+  resetCameraView();
+});
+
+// Single tap/click on 3D canvas (without drag) focuses on clicked island
 window.addEventListener('click', (event) => {
   // Ignore clicks on UI elements
   if (
@@ -664,14 +714,36 @@ window.addEventListener('click', (event) => {
   }
   conductor.resetIdle();
 
+  // If user was dragging 360° orbit, do not trigger raycast click
+  if (hasDragged) return;
+
   pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects(tower.group.children, true);
 
-  if (intersects.length > 0) {
-    let hit = intersects[0].object;
+  // 1. Check Pumpkin Grove Island
+  if (satelliteIslands && satelliteIslands.leftIsland) {
+    const pumpkinHits = raycaster.intersectObjects(satelliteIslands.leftIsland.children, true);
+    if (pumpkinHits.length > 0) {
+      focusIsland('pumpkin');
+      return;
+    }
+  }
+
+  // 2. Check Cottage Outpost Island
+  if (satelliteIslands && satelliteIslands.rightIsland) {
+    const cottageHits = raycaster.intersectObjects(satelliteIslands.rightIsland.children, true);
+    if (cottageHits.length > 0) {
+      focusIsland('cottage');
+      return;
+    }
+  }
+
+  // 3. Check Main Tower & Sanctuary
+  const towerHits = raycaster.intersectObjects(tower.group.children, true);
+  if (towerHits.length > 0) {
+    let hit = towerHits[0].object;
     let namedParent = hit;
     while (namedParent && !namedParent.name && namedParent !== tower.group) {
       namedParent = namedParent.parent;
@@ -683,8 +755,8 @@ window.addEventListener('click', (event) => {
       particles.triggerCauldronBurst();
       audio.playBubble();
       showToast('Cauldron Elixir Bubbles');
-    } else if (name === 'telescope' || name === 'wizardRoof' || name === 'chimney') {
-      audio.playChime();
+    } else {
+      focusIsland('sanctuary');
     }
   }
 });

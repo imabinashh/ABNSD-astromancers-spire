@@ -358,13 +358,14 @@ body.mode-free-orbit .scroll-container {
 }
 
 .atmosphere-pill-group,
-.camera-pill-btn,
+.camera-mode-pill-group,
 .audio-circle-btn {
   pointer-events: auto;
 }
 
 /* Segmented Obsidian Stone Atmosphere Group */
-.atmosphere-pill-group {
+.atmosphere-pill-group,
+.camera-mode-pill-group {
   display: flex;
   align-items: center;
   background: var(--obsidian-gradient);
@@ -376,7 +377,8 @@ body.mode-free-orbit .scroll-container {
   gap: 2px;
 }
 
-.theme-pill-btn {
+.theme-pill-btn,
+.camera-mode-btn {
   background: transparent;
   color: var(--text-parchment);
   border: 1px solid transparent;
@@ -395,88 +397,38 @@ body.mode-free-orbit .scroll-container {
   white-space: nowrap;
 }
 
-.theme-pill-btn .pill-icon {
+.theme-pill-btn .pill-icon,
+.camera-mode-btn .pill-icon {
   flex-shrink: 0;
   color: var(--brass-primary);
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.theme-pill-btn:hover {
+.theme-pill-btn:hover,
+.camera-mode-btn:hover {
   color: #ffffff;
   background: rgba(198, 155, 83, 0.16);
   border-color: rgba(198, 155, 83, 0.4);
   transform: translateY(-1px);
 }
 
-.theme-pill-btn:hover .pill-icon {
+.theme-pill-btn:hover .pill-icon,
+.camera-mode-btn:hover .pill-icon {
   color: var(--brass-bright);
 }
 
-.theme-pill-btn.active {
+.theme-pill-btn.active,
+.camera-mode-btn.active {
   background: var(--cyan-active-fill);
   color: var(--text-gold);
   border-color: var(--cyan-spectral);
   box-shadow: var(--cyan-aura);
 }
 
-.theme-pill-btn.active .pill-icon {
+.theme-pill-btn.active .pill-icon,
+.camera-mode-btn.active .pill-icon {
   color: var(--cyan-spectral);
   transform: scale(1.1);
-}
-
-/* Camera Orbit Toggle Button */
-.camera-pill-btn {
-  background: var(--obsidian-gradient);
-  backdrop-filter: blur(14px);
-  color: var(--text-gold);
-  border: 1px solid var(--brass-border);
-  outline: none;
-  font-family: var(--font-serif);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.54rem 1.15rem;
-  border-radius: 9999px;
-  box-shadow: var(--brass-shadow), var(--brass-highlight);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  white-space: nowrap;
-  text-shadow: var(--text-shadow-deep);
-}
-
-.camera-pill-btn .pill-icon {
-  color: var(--brass-primary);
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.camera-pill-btn:hover {
-  border-color: var(--brass-bright);
-  color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: var(--brass-glow), var(--brass-shadow);
-}
-
-.camera-pill-btn:hover .pill-icon {
-  color: var(--brass-bright);
-}
-
-.camera-pill-btn:active {
-  transform: translateY(0);
-}
-
-.camera-pill-btn.active {
-  background: var(--cyan-active-fill);
-  border-color: var(--cyan-spectral);
-  box-shadow: var(--cyan-aura), var(--brass-shadow);
-  color: var(--text-gold);
-}
-
-.camera-pill-btn.active .pill-icon {
-  color: var(--cyan-spectral);
 }
 
 /* Audio Toggle Circle Rune Medallion */
@@ -940,7 +892,7 @@ body.mode-free-orbit .scroll-container {
   .menu-pill-btn,
   .hud-btn,
   .theme-pill-btn,
-  .camera-pill-btn,
+  .camera-mode-btn,
   .audio-circle-btn,
   .menu-circle-btn {
     touch-action: manipulation;
@@ -958,12 +910,14 @@ body.mode-free-orbit .scroll-container {
     gap: 0.4rem;
   }
 
-  .atmosphere-pill-group {
+  .atmosphere-pill-group,
+  .camera-mode-pill-group {
     padding: 3px;
     gap: 2px;
   }
 
-  .theme-pill-btn {
+  .theme-pill-btn,
+  .camera-mode-btn {
     width: 38px;
     height: 38px;
     padding: 0;
@@ -971,26 +925,15 @@ body.mode-free-orbit .scroll-container {
     border-radius: 50%;
   }
 
-  .theme-pill-btn span {
+  .theme-pill-btn span,
+  .camera-mode-btn .mode-text {
     display: none; /* Icons only for clean compact touch row */
   }
 
-  .theme-pill-btn .pill-icon {
+  .theme-pill-btn .pill-icon,
+  .camera-mode-btn .pill-icon {
     width: 17px;
     height: 17px;
-  }
-
-  .camera-pill-btn {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    justify-content: center;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .camera-pill-btn .camera-btn-text {
-    display: none;
   }
 
   .audio-circle-btn {

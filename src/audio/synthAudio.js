@@ -1,118 +1,143 @@
-// Web Audio API ambient fantasy soundscape (Zero external assets needed)
+// Web Audio API pure crystal chime soundscape (Zero external assets, zero muddy hum)
 
 export function createSynthAudio() {
   let ctx = null;
   let isMuted = true;
-  let droneGain = null;
-  let osc1 = null;
-  let osc2 = null;
-  let filter = null;
-  let lfo = null;
+  let ambientTimer = null;
 
   function init() {
     if (ctx) return;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     ctx = new AudioContext();
-
-    // Master drone gain
-    droneGain = ctx.createGain();
-    droneGain.gain.setValueAtTime(0.0, ctx.currentTime);
-    droneGain.connect(ctx.destination);
-
-    // Filter for warm soft atmosphere
-    filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(320, ctx.currentTime);
-    filter.connect(droneGain);
-
-    // Warm mystical drone chord (D minor / A)
-    osc1 = ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(146.83, ctx.currentTime); // D3
-    osc1.connect(filter);
-    osc1.start();
-
-    osc2 = ctx.createOscillator();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(220.0, ctx.currentTime); // A3
-    const osc2Gain = ctx.createGain();
-    osc2Gain.gain.setValueAtTime(0.35, ctx.currentTime);
-    osc2.connect(osc2Gain);
-    osc2Gain.connect(filter);
-    osc2.start();
-
-    // Subtle LFO for gentle wind breathing
-    lfo = ctx.createOscillator();
-    lfo.frequency.setValueAtTime(0.2, ctx.currentTime);
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.setValueAtTime(80, ctx.currentTime);
-    lfo.connect(lfoGain);
-    lfoGain.connect(filter.frequency);
-    lfo.start();
   }
 
-  function toggle() {
+  // Play crisp, delicate "ling-tingl" crystalline glass chime (for UI clicks & interactions)
+  function playTinkle(index = -1) {
     init();
-    if (ctx.state === 'suspended') {
+    if (ctx && ctx.state === 'suspended') {
       ctx.resume();
     }
-    isMuted = !isMuted;
-    if (droneGain) {
-      droneGain.gain.setTargetAtTime(isMuted ? 0.0 : 0.12, ctx.currentTime, 0.5);
-    }
-    return !isMuted;
+    try {
+      const now = ctx.currentTime;
+      // High-register celestial pentatonic chime scale (D6 to D7)
+      const scale = [1174.66, 1318.51, 1567.98, 1760.00, 2093.00, 2349.32];
+      const freq = index >= 0 && index < scale.length ? scale[index] : scale[Math.floor(Math.random() * scale.length)];
+
+      // 1. Primary fundamental crystal tone
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(freq, now);
+
+      gain1.gain.setValueAtTime(0.0001, now);
+      gain1.gain.linearRampToValueAtTime(0.09, now + 0.003); // ultra-crisp ping
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.55);
+
+      // 2. Harmonic overtone (2.76x physical bell shimmer) with slight micro-delay
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(freq * 2.756, now + 0.008);
+
+      gain2.gain.setValueAtTime(0.0001, now + 0.008);
+      gain2.gain.linearRampToValueAtTime(0.038, now + 0.012);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.008);
+      osc2.stop(now + 0.4);
+    } catch (e) {}
   }
 
   // Play charming cauldron bubble sound
   function playBubble() {
+    init();
     if (isMuted || !ctx) return;
     try {
+      const now = ctx.currentTime;
+      const baseFreq = 420 + Math.random() * 260;
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const now = ctx.currentTime;
-      const baseFreq = 400 + Math.random() * 300;
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(baseFreq, now);
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, now + 0.15);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, now + 0.14);
 
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
-      osc.stop(now + 0.18);
+      osc.stop(now + 0.17);
     } catch (e) {}
   }
 
-  // Play soft magic chime
-  function playChime() {
-    if (isMuted || !ctx) return;
-    try {
-      const notes = [587.33, 659.25, 783.99, 880.0, 1046.5]; // D5, E5, G5, A5, C6
-      const freq = notes[Math.floor(Math.random() * notes.length)];
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const now = ctx.currentTime;
+  // Ambient gentle stardust chimes (airs softly when sound is active, ZERO hum/drone)
+  function scheduleAmbientChime() {
+    if (ambientTimer) clearTimeout(ambientTimer);
+    if (isMuted) return;
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
+    // Random interval between 2.8s and 5.5s
+    const nextDelay = 2800 + Math.random() * 2700;
+    ambientTimer = setTimeout(() => {
+      if (!isMuted && ctx) {
+        try {
+          const now = ctx.currentTime;
+          const ambientNotes = [880.0, 987.77, 1174.66, 1318.51, 1567.98, 1760.0];
+          const freq = ambientNotes[Math.floor(Math.random() * ambientNotes.length)];
 
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.85);
-    } catch (e) {}
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(0.035, now + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 1.25);
+        } catch (e) {}
+      }
+      if (!isMuted) {
+        scheduleAmbientChime();
+      }
+    }, nextDelay);
+  }
+
+  function toggle() {
+    init();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    isMuted = !isMuted;
+    if (!isMuted) {
+      playTinkle(3);
+      scheduleAmbientChime();
+    } else {
+      if (ambientTimer) {
+        clearTimeout(ambientTimer);
+        ambientTimer = null;
+      }
+    }
+    return !isMuted;
   }
 
   return {
     toggle,
+    playTinkle,
+    playChime: playTinkle,
     playBubble,
-    playChime,
     isMuted: () => isMuted
   };
 }

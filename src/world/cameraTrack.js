@@ -1,32 +1,35 @@
 import * as THREE from 'three';
 
-// Camera track with complete 360-degree helical orbit descent:
-// 1. Overview: Whole tower & floating island visible through clouds
-// 2. Ascent: Glides up towards the crooked wizard spire & observatory
-// 3. Complete 360° Orbit Descent: Camera spirals 360° around the tower as it descends from top to bottom
-// 4. Pullback: Moves away from the island back to the original overview position!
+// ============================================================================
+// Multi-Island Archipelago Camera Track:
+// 1. Archipelago Overview: Panoramic view of all 3 islands & rainbow
+// 2. Pumpkin Grove Swoop: Banks low over rope bridge, pumpkin patch & crane lantern
+// 3. Spire Ascent & Spiral: Climbs from stone base past timber study to observatory
+// 4. Cottage Outpost Flyby: Glides across stepping stones, circling turquoise belfry
+// 5. Grand Pullback: Smoothly returns to full panoramic archipelago overview
+// ============================================================================
 
 export function createCameraTrack() {
-  // Initial overview values matching front-facing cinematic archipelago view
+  // 1. Main Overview Framing
   const overviewPos = new THREE.Vector3(10.0, 10.8, 32.5);
   const overviewTarget = new THREE.Vector3(0.0, 5.2, 0.0);
   const overviewFov = 42;
 
-  // Starting azimuth angle of the camera relative to tower center (0, 0)
-  const angle0 = Math.atan2(overviewPos.x, overviewPos.z); // ≈ 0.6666 rad (~38.2°)
-  const overviewRadius = Math.hypot(overviewPos.x, overviewPos.z); // ≈ 29.91
+  // 2. Pumpkin Grove Waypoint
+  const pumpkinCenter = new THREE.Vector3(-15.5, 4.0, 5.5);
+  const pumpkinEntryPos = new THREE.Vector3(-9.5, 7.2, 17.5);
+  const pumpkinFocusPos = new THREE.Vector3(-18.5, 6.2, 12.5);
 
-  // Top observatory close-up values
-  const topRadius = 9.0;
-  const topY = 15.0;
-  const topTarget = new THREE.Vector3(-0.4, 12.5, 0.2);
-  const topFov = 37;
+  // 3. Spire Base & Top Observatory Waypoints
+  const spireBaseTarget = new THREE.Vector3(0.0, 3.2, 0.0);
+  const spireBasePos = new THREE.Vector3(6.5, 4.5, 9.5);
+  const spireTopTarget = new THREE.Vector3(-0.4, 12.5, 0.2);
+  const spireTopPos = new THREE.Vector3(0.0, 15.0, 9.8);
 
-  // Ground level close-up values
-  const groundRadius = 9.0;
-  const groundY = 2.4;
-  const groundTarget = new THREE.Vector3(0.6, 1.4, 0.8);
-  const groundFov = 40;
+  // 4. Cottage Outpost Waypoints
+  const cottageCenter = new THREE.Vector3(16.5, 4.8, -4.5);
+  const cottageEntryPos = new THREE.Vector3(12.5, 7.8, 6.5);
+  const cottageFocusPos = new THREE.Vector3(20.5, 7.0, 1.5);
 
   // Reusable vectors for zero GC allocation in render loop
   const _tempPos = new THREE.Vector3();
@@ -37,90 +40,115 @@ export function createCameraTrack() {
     return c * c * (3 - 2 * c);
   }
 
-  // Sample the camera track at normalized scroll progress [0..1]
+  // Sample camera choreography at normalized scroll progress [0..1]
   function getSample(progress) {
     const p = Math.max(0, Math.min(1, progress));
 
-    if (p <= 0.25) {
-      // -------------------------------------------------------------
-      // Phase 1 (0.0 to 0.25): Gliding from Overview up to Spire Top
-      // -------------------------------------------------------------
-      const t = smoothstep(p / 0.25);
-
-      // Interpolate radius and height toward top
-      const r = THREE.MathUtils.lerp(overviewRadius, topRadius, t);
-      const y = THREE.MathUtils.lerp(overviewPos.y, topY, t);
-
-      _tempPos.set(
-        Math.sin(angle0) * r,
-        y,
-        Math.cos(angle0) * r
-      );
-      _tempTarget.lerpVectors(overviewTarget, topTarget, t);
-      const fov = THREE.MathUtils.lerp(overviewFov, topFov, t);
-
-      return { position: _tempPos, target: _tempTarget, fov };
-    } else if (p <= 0.80) {
-      // -------------------------------------------------------------
-      // Phase 2 (0.25 to 0.80): COMPLETE 360-DEGREE ORBIT DESCENT!
-      // Camera completes a full 360° (2*PI) orbit around the tower
-      // while smoothly descending from top observatory to ground level.
-      // -------------------------------------------------------------
-      const t = (p - 0.25) / (0.80 - 0.25);
+    if (p <= 0.16) {
+      // -----------------------------------------------------------------
+      // Phase 1 (0.00 to 0.16): Full Archipelago Overview
+      // -----------------------------------------------------------------
+      const t = smoothstep(p / 0.16);
+      // Gentle subtle breathing drift
+      _tempPos.copy(overviewPos);
+      _tempPos.y += Math.sin(t * Math.PI) * 0.35;
+      _tempTarget.copy(overviewTarget);
+      return { position: _tempPos, target: _tempTarget, fov: overviewFov };
+    } else if (p <= 0.42) {
+      // -----------------------------------------------------------------
+      // Phase 2 (0.16 to 0.42): The Alchemist's Pumpkin Grove Swoop
+      // Glides from overview down along the rope bridge and sweeps around pumpkins
+      // -----------------------------------------------------------------
+      const t = (p - 0.16) / (0.42 - 0.16);
       const tSmooth = smoothstep(t);
 
-      // Complete 360-degree rotation (2*PI)
-      const currentAngle = angle0 + tSmooth * Math.PI * 2;
+      if (tSmooth < 0.5) {
+        const subT = tSmooth / 0.5;
+        _tempPos.lerpVectors(overviewPos, pumpkinEntryPos, subT);
+        _tempTarget.lerpVectors(overviewTarget, pumpkinCenter, subT);
+      } else {
+        const subT = (tSmooth - 0.5) / 0.5;
+        _tempPos.lerpVectors(pumpkinEntryPos, pumpkinFocusPos, subT);
+        _tempTarget.copy(pumpkinCenter);
+      }
+      const fov = THREE.MathUtils.lerp(overviewFov, 38, tSmooth);
+      return { position: _tempPos, target: _tempTarget, fov };
+    } else if (p <= 0.72) {
+      // -----------------------------------------------------------------
+      // Phase 3 (0.42 to 0.72): Spire Sanctuary Ascent & Spiral
+      // Crosses over to the main spire base and climbs spiraling to the observatory
+      // -----------------------------------------------------------------
+      const t = (p - 0.42) / (0.72 - 0.42);
+      const tSmooth = smoothstep(t);
 
-      // Smooth descent from top to ground
-      const currentY = THREE.MathUtils.lerp(topY, groundY, tSmooth);
-      const currentRadius = THREE.MathUtils.lerp(topRadius, groundRadius, tSmooth);
+      if (tSmooth < 0.35) {
+        // Transition from Pumpkin patch to Spire base
+        const subT = tSmooth / 0.35;
+        _tempPos.lerpVectors(pumpkinFocusPos, spireBasePos, subT);
+        _tempTarget.lerpVectors(pumpkinCenter, spireBaseTarget, subT);
+        const fov = THREE.MathUtils.lerp(38, 40, subT);
+        return { position: _tempPos, target: _tempTarget, fov };
+      } else {
+        // Spiral ascent from spire base to timber study and observatory roof
+        const subT = (tSmooth - 0.35) / 0.65;
+        const currentAngle = 0.95 + subT * Math.PI * 1.75;
+        const currentRadius = THREE.MathUtils.lerp(9.5, 9.0, subT);
+        const currentY = THREE.MathUtils.lerp(spireBasePos.y, spireTopPos.y, subT);
 
-      _tempPos.set(
-        Math.sin(currentAngle) * currentRadius,
-        currentY,
-        Math.cos(currentAngle) * currentRadius
-      );
+        _tempPos.set(
+          Math.sin(currentAngle) * currentRadius,
+          currentY,
+          Math.cos(currentAngle) * currentRadius
+        );
+        _tempTarget.lerpVectors(spireBaseTarget, spireTopTarget, subT);
+        const fov = THREE.MathUtils.lerp(40, 37, subT);
+        return { position: _tempPos, target: _tempTarget, fov };
+      }
+    } else if (p <= 0.90) {
+      // -----------------------------------------------------------------
+      // Phase 4 (0.72 to 0.90): Cottage Outpost & Belfry Flyby
+      // Dives down across the levitating stones to inspect the cottage outpost
+      // -----------------------------------------------------------------
+      const t = (p - 0.72) / (0.90 - 0.72);
+      const tSmooth = smoothstep(t);
 
-      // Target tracks down from upper spire to ground portal
-      _tempTarget.lerpVectors(topTarget, groundTarget, tSmooth);
-      const fov = THREE.MathUtils.lerp(topFov, groundFov, tSmooth);
-
+      if (tSmooth < 0.5) {
+        const subT = tSmooth / 0.5;
+        _tempPos.lerpVectors(spireTopPos, cottageEntryPos, subT);
+        _tempTarget.lerpVectors(spireTopTarget, cottageCenter, subT);
+      } else {
+        const subT = (tSmooth - 0.5) / 0.5;
+        _tempPos.lerpVectors(cottageEntryPos, cottageFocusPos, subT);
+        _tempTarget.copy(cottageCenter);
+      }
+      const fov = THREE.MathUtils.lerp(37, 38, tSmooth);
       return { position: _tempPos, target: _tempTarget, fov };
     } else {
-      // -------------------------------------------------------------
-      // Phase 3 (0.80 to 1.00): Pullback Reveal back to Original View
-      // From ground level, camera pulls back & elevates into the clouds,
-      // smoothly returning to the exact original overview position!
-      // -------------------------------------------------------------
-      const t = (p - 0.80) / (1.00 - 0.80);
+      // -----------------------------------------------------------------
+      // Phase 5 (0.90 to 1.00): Grand Pullback Reveal back to Overview
+      // -----------------------------------------------------------------
+      const t = (p - 0.90) / (1.00 - 0.90);
       const tSmooth = smoothstep(t);
 
-      // Angle remains aligned with angle0 (since angle0 + 2*PI == angle0)
-      const r = THREE.MathUtils.lerp(groundRadius, overviewRadius, tSmooth);
-      const y = THREE.MathUtils.lerp(groundY, overviewPos.y, tSmooth);
-
-      _tempPos.set(
-        Math.sin(angle0) * r,
-        y,
-        Math.cos(angle0) * r
-      );
-      _tempTarget.lerpVectors(groundTarget, overviewTarget, tSmooth);
-      const fov = THREE.MathUtils.lerp(groundFov, overviewFov, tSmooth);
-
+      _tempPos.lerpVectors(cottageFocusPos, overviewPos, tSmooth);
+      _tempTarget.lerpVectors(cottageCenter, overviewTarget, tSmooth);
+      const fov = THREE.MathUtils.lerp(38, overviewFov, tSmooth);
       return { position: _tempPos, target: _tempTarget, fov };
     }
   }
 
   const keyframes = [
-    { progress: 0.0, label: 'The Floating Spire' },
-    { progress: 0.25, label: 'The Wizard Observatory' },
-    { progress: 0.52, label: '360° Orbital Descent' },
-    { progress: 0.80, label: 'Sanctum Grounds' },
-    { progress: 1.0, label: 'The Island Revealed' }
+    { progress: 0.0, label: 'Archipelago Overview' },
+    { progress: 0.28, label: "The Alchemist's Pumpkin Grove" },
+    { progress: 0.58, label: "The Astromancer's Spire & Observatory" },
+    { progress: 0.82, label: 'Cottage Outpost & Belfry' },
+    { progress: 1.0, label: 'Archipelago Revealed' }
   ];
 
   return {
+    overviewPos,
+    overviewTarget,
+    overviewFov,
     keyframes,
     getSample
   };
