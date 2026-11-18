@@ -158,10 +158,40 @@ export function createClouds(scene) {
     });
   }
 
+  function setTheme(theme) {
+    if (theme === 'night') {
+      // Subtle blue-indigo emissive rim (#1a2442) so low-poly faceted shapes remain crisp and readable at night
+      cloudMaterial.color.setHex(0x28385a);
+      cloudMaterial.emissive.setHex(0x1a2442);
+      cloudMaterial.emissiveIntensity = 0.92;
+
+      cloudMatWarm.color.setHex(0x32446e);
+      cloudMatWarm.emissive.setHex(0x1a2442);
+      cloudMatWarm.emissiveIntensity = 1.0;
+    } else if (theme === 'sunset') {
+      cloudMaterial.color.setHex(0xfbf8f4);
+      cloudMaterial.emissive.setHex(0x000000);
+      cloudMaterial.emissiveIntensity = 0.0;
+
+      cloudMatWarm.color.setHex(0xffe8d6);
+      cloudMatWarm.emissive.setHex(0x000000);
+      cloudMatWarm.emissiveIntensity = 0.0;
+    } else {
+      cloudMaterial.color.setHex(0xffffff);
+      cloudMaterial.emissive.setHex(0x000000);
+      cloudMaterial.emissiveIntensity = 0.0;
+
+      cloudMatWarm.color.setHex(0xf2f7ff);
+      cloudMatWarm.emissive.setHex(0x000000);
+      cloudMatWarm.emissiveIntensity = 0.0;
+    }
+  }
+
   return {
     group: masterCloudGroup,
     cloudMaterial,
     cloudMatWarm,
+    setTheme,
     update
   };
 }

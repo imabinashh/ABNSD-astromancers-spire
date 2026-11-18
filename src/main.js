@@ -43,7 +43,7 @@ const camRotateLeftBtn = document.getElementById('cam-rotate-left-btn');
 const camRotateRightBtn = document.getElementById('cam-rotate-right-btn');
 
 // 1. Initialize 3D World Core
-const { scene, camera, renderer, controls, update: updateScene } = createScene(canvas);
+const { scene, camera, renderer, controls, cloudMat: bgCloudMat, update: updateScene } = createScene(canvas);
 const lighting = createLighting(scene);
 const tower = createTowerModel();
 scene.add(tower.group);
@@ -59,6 +59,7 @@ const audio = createSynthAudio();
 lighting.applyPreset('sunset');
 celestial.setTheme('sunset');
 satelliteIslands.setTheme('sunset');
+clouds.setTheme('sunset');
 
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
@@ -467,18 +468,28 @@ themeBtns.forEach((btn) => {
     celestial.setTheme(theme);
     satelliteIslands.setTheme(theme);
 
-    // Update cloud materials based on atmosphere
+    // Update cloud materials based on atmosphere (including subtle night blue-indigo rim)
+    clouds.setTheme(theme);
     if (theme === 'night') {
-      clouds.cloudMaterial.color.setHex(0x28324a);
-      clouds.cloudMatWarm.color.setHex(0x354060);
+      if (bgCloudMat) {
+        bgCloudMat.color.setHex(0x28385a);
+        bgCloudMat.emissive.setHex(0x1a2442);
+        bgCloudMat.emissiveIntensity = 0.85;
+      }
       showToast('Midnight Leylines Activated');
     } else if (theme === 'sunset') {
-      clouds.cloudMaterial.color.setHex(0xfbf8f4);
-      clouds.cloudMatWarm.color.setHex(0xffe8d6);
+      if (bgCloudMat) {
+        bgCloudMat.color.setHex(0xf5f0ee);
+        bgCloudMat.emissive.setHex(0x000000);
+        bgCloudMat.emissiveIntensity = 0.0;
+      }
       showToast('Golden Sunset Hour');
     } else {
-      clouds.cloudMaterial.color.setHex(0xffffff);
-      clouds.cloudMatWarm.color.setHex(0xf2f7ff);
+      if (bgCloudMat) {
+        bgCloudMat.color.setHex(0xffffff);
+        bgCloudMat.emissive.setHex(0x000000);
+        bgCloudMat.emissiveIntensity = 0.0;
+      }
       showToast('Radiant Daylight Activated');
     }
 

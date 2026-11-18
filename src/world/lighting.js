@@ -54,6 +54,7 @@ export function createLighting(scene) {
       ambientIntensity: 1.05,
       hemiSky: 0xffd9c7,
       hemiGround: 0x6e4e3f,
+      hemiIntensity: 0.7,
       cauldronIntensity: 2.4,
       windowIntensity: 2.2,
       fogColor: 0xc8b5d0,
@@ -62,16 +63,18 @@ export function createLighting(scene) {
       bgBottom: '#e6c8b4'
     },
     night: {
-      sunColor: 0xb5d4ff,
-      sunIntensity: 2.4,
+      sunColor: 0xc8ddff,
+      sunIntensity: 2.2,
       sunPosition: [-28.0, 26.0, -25.0],
-      ambientColor: 0x364875,
-      ambientIntensity: 0.95,
-      hemiSky: 0x485f94,
-      hemiGround: 0x20283c,
+      ambientColor: 0x3e5288,
+      ambientIntensity: 1.15,
+      // Subtle blue-indigo HemisphereLight: brightens clouds & island underside silhouettes
+      hemiSky: 0x627db8,
+      hemiGround: 0x384a75,
+      hemiIntensity: 1.1,
       cauldronIntensity: 4.8,
       windowIntensity: 4.2,
-      fogColor: 0x0f1424,
+      fogColor: 0x101628,
       fogDensity: 0.007,
       bgTop: '#090d1a',
       bgBottom: '#1c2540'
@@ -79,11 +82,12 @@ export function createLighting(scene) {
     day: {
       sunColor: 0xfffaea,
       sunIntensity: 2.4,
-      sunPosition: [-26.0, 28.0, -24.0],
+      sunPosition: [-30.0, 21.5, -28.0],
       ambientColor: 0xdbe8ff,
       ambientIntensity: 1.15,
       hemiSky: 0xd8eeff,
       hemiGround: 0x768755,
+      hemiIntensity: 0.75,
       cauldronIntensity: 1.5,
       windowIntensity: 1.2,
       fogColor: 0xd4e7f8,
@@ -108,6 +112,7 @@ export function createLighting(scene) {
 
     hemiLight.color.setHex(p.hemiSky);
     hemiLight.groundColor.setHex(p.hemiGround);
+    hemiLight.intensity = p.hemiIntensity || 0.7;
 
     cauldronLight.intensity = p.cauldronIntensity;
     upperRoomLight.intensity = p.windowIntensity;

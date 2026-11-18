@@ -91,21 +91,26 @@ export function createCelestial(scene) {
     flatShading: true,
     transparent: true,
     fog: false,
-    opacity: 0.85
+    opacity: 0.85,
+    depthWrite: false // Prevents Z-fighting and clipping into inner sun sphere
   });
 
   const rayCount = 14;
   for (let i = 0; i < rayCount; i++) {
     const isLong = i % 2 === 0;
-    const rayGeo = new THREE.ConeGeometry(isLong ? 0.65 : 0.42, isLong ? 3.8 : 2.5, 4);
-    rayGeo.rotateX(Math.PI / 2); // point outward radially
+    const rayHeight = isLong ? 3.6 : 2.4;
+    const rayGeo = new THREE.ConeGeometry(isLong ? 0.6 : 0.38, rayHeight, 4);
+    // Align cone so base is at y = 0 and tip extends outward along +y
+    rayGeo.translate(0, rayHeight / 2, 0);
     const rayMesh = new THREE.Mesh(rayGeo, sunRayMat);
     const angle = (i / rayCount) * Math.PI * 2;
-    const dist = 5.4;
+    // Set base at dist = 4.65 (cleanly outside the 4.4 radius icosahedron, preventing overlap)
+    const dist = 4.65;
     rayMesh.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, 0);
     rayMesh.rotation.z = angle - Math.PI / 2;
     sunRaysGroup.add(rayMesh);
   }
+  sunRaysGroup.renderOrder = 2;
   sunGroup.add(sunRaysGroup);
 
   // Inner Radiant Solar Corona
@@ -324,8 +329,8 @@ export function createCelestial(scene) {
     } else if (theme === 'day') {
       // 2. Radiant Day Sun in distant upper sky
       targetSunOpacity = 1.0;
-      targetSunScale = 1.0;
-      targetSunPos.set(-26.0, 28.0, -24.0);
+      targetSunScale = 1.1;
+      targetSunPos.set(-30.0, 21.5, -28.0);
       targetSunColor.setHex(0xffffff);
       targetSunEmissive.setHex(0xffd740); // brilliant solar gold
       targetCoronaColor.setHex(0xffea88);
@@ -358,12 +363,14 @@ export function createCelestial(scene) {
     // Smooth position lerp with gentle celestial floating bob
     sunGroup.position.lerp(targetSunPos, 0.06);
     sunGroup.position.y += Math.sin(time * 0.4) * 0.02;
+    sunGroup.lookAt(0, 8, 0);
 
     // Smooth color & emissive lerp
     sunMat.color.lerp(targetSunColor, 0.08);
     sunMat.emissive.lerp(targetSunEmissive, 0.08);
     sunCoronaMat.color.lerp(targetCoronaColor, 0.08);
     sunAuraMat.color.lerp(targetAuraColor, 0.08);
+    sunRayMat.color.lerp(targetSunColor, 0.08);
     sunRayMat.emissive.lerp(targetSunEmissive, 0.08);
 
     // Scale lerp
