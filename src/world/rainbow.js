@@ -117,10 +117,10 @@ export function createRainbow(scene) {
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'atmosphericRainbow';
 
-  // Position far behind the floating islands across the right-hand horizon
-  mesh.position.set(17.0, 6.2, -46.0);
-  // Orient to face the primary overview camera angle
-  mesh.lookAt(18.5, 6.2, 23.5);
+  // Position far behind the floating islands across the horizon
+  mesh.position.set(2.0, 7.5, -46.0);
+  // Orient to face the front-facing archipelago camera angle
+  mesh.lookAt(10.0, 7.5, 32.5);
 
   scene.add(mesh);
 

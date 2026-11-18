@@ -13,8 +13,8 @@ export function createScene(canvas) {
     0.1,
     250
   );
-  camera.position.set(18.5, 14.8, 23.5);
-  camera.lookAt(0, 5.8, 0);
+  camera.position.set(10.0, 10.8, 32.5);
+  camera.lookAt(0, 5.2, 0);
 
   // 3. Renderer
   const renderer = new THREE.WebGLRenderer({

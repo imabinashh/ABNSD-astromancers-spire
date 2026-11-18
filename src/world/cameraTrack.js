@@ -7,9 +7,9 @@ import * as THREE from 'three';
 // 4. Pullback: Moves away from the island back to the original overview position!
 
 export function createCameraTrack() {
-  // Initial overview values
-  const overviewPos = new THREE.Vector3(18.5, 14.8, 23.5);
-  const overviewTarget = new THREE.Vector3(0.0, 5.8, 0.0);
+  // Initial overview values matching front-facing cinematic archipelago view
+  const overviewPos = new THREE.Vector3(10.0, 10.8, 32.5);
+  const overviewTarget = new THREE.Vector3(0.0, 5.2, 0.0);
   const overviewFov = 42;
 
   // Starting azimuth angle of the camera relative to tower center (0, 0)

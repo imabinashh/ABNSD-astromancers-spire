@@ -69,29 +69,27 @@ export function createClouds(scene) {
 
   // ==============================================================
   // 1. CLOUDS NEAR CAMERA (Framing the view like a window in mist)
-  // Camera starts at (18.5, 14.8, 23.5) looking at (0, 5.8, 0).
-  // These clouds are placed at the perimeter edges to frame the tower
-  // so the entire tower is visible THROUGH the gap in the clouds!
+  // Framed to keep the front-facing archipelago and Spire roof unobstructed!
   // ==============================================================
   const cameraClouds = [];
   const cameraCloudConfigs = [
-    // Left Foreground Cloud (Framing left edge of lens)
-    { pos: [8.5, 9.5, 23.0], scale: 1.1, driftSpeed: 0.2, phase: 0.0 },
-    { pos: [11.0, 6.0, 21.0], scale: 1.0, driftSpeed: 0.18, phase: 1.2 },
+    // Left Foreground Cloud (Framing left edge of lens beyond Pumpkin Grove)
+    { pos: [-16.0, 11.5, 19.0], scale: 1.1, driftSpeed: 0.2, phase: 0.0 },
+    { pos: [-18.5, 7.5, 21.0], scale: 1.0, driftSpeed: 0.18, phase: 1.2 },
 
-    // Right Foreground Cloud (Framing right edge of lens)
-    { pos: [22.0, 16.5, 15.0], scale: 1.15, driftSpeed: 0.22, phase: 2.1 },
-    { pos: [19.5, 11.0, 14.5], scale: 1.05, driftSpeed: 0.15, phase: 3.5 },
+    // Right Foreground Cloud (Framing right edge of lens beyond Cottage Outpost)
+    { pos: [24.0, 14.0, 17.0], scale: 1.15, driftSpeed: 0.22, phase: 2.1 },
+    { pos: [22.0, 8.0, 19.0], scale: 1.05, driftSpeed: 0.15, phase: 3.5 },
 
-    // Bottom Foreground Cloud Bed (Resting in bottom foreground below the tower view)
-    { pos: [15.5, 4.8, 22.5], scale: 1.3, driftSpeed: 0.16, phase: 4.2 },
-    { pos: [19.0, 6.2, 18.5], scale: 1.1, driftSpeed: 0.19, phase: 5.1 },
+    // Bottom Foreground Cloud Bed (Resting below the island bottom tips)
+    { pos: [6.0, -3.8, 25.0], scale: 1.3, driftSpeed: 0.16, phase: 4.2 },
+    { pos: [14.0, -3.2, 23.0], scale: 1.1, driftSpeed: 0.19, phase: 5.1 },
 
-    // Top Right Cloud (High ceiling mist)
-    { pos: [14.0, 19.5, 13.5], scale: 1.0, driftSpeed: 0.25, phase: 0.8 },
+    // Top Right Cloud (High ceiling mist well above the Spire roof)
+    { pos: [16.0, 22.0, 16.0], scale: 1.0, driftSpeed: 0.25, phase: 0.8 },
 
-    // Fly-through cloud during ascent (placed just off to the side)
-    { pos: [5.8, 16.2, 9.8], scale: 0.85, driftSpeed: 0.2, phase: 1.9 }
+    // Side drift cloud during ascent
+    { pos: [-10.0, 18.0, 12.0], scale: 0.85, driftSpeed: 0.2, phase: 1.9 }
   ];
 
   cameraCloudConfigs.forEach(cfg => {

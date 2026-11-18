@@ -67,14 +67,14 @@ rainbow.setTheme('sunset', 0);
 
 // Current camera interpolation states
 const currentCamPos = new THREE.Vector3().copy(camera.position);
-const currentCamTarget = new THREE.Vector3(0, 5.8, 0);
+const currentCamTarget = new THREE.Vector3(0, 5.2, 0);
 let targetFov = 42;
 
 // Cinematic Idle Auto-Orbit State
 let idleWeight = 0;
-let sanctuaryOrbitAngle = 0.9;
+let sanctuaryOrbitAngle = Math.atan2(10.0, 32.5);
 let islandOrbitAngle = 0;
-const towerCenterTarget = new THREE.Vector3(0, 5.8, 0);
+const towerCenterTarget = new THREE.Vector3(0, 5.2, 0);
 const tempIdlePos = new THREE.Vector3();
 const blendedCamPos = new THREE.Vector3();
 const blendedCamTarget = new THREE.Vector3();
@@ -417,8 +417,8 @@ function resetCameraView() {
     disableFreeOrbit();
   }
   flyToWaypoint(
-    new THREE.Vector3(18.5, 14.8, 23.5),
-    new THREE.Vector3(0, 5.8, 0),
+    new THREE.Vector3(10.0, 10.8, 32.5),
+    new THREE.Vector3(0, 5.2, 0),
     42,
     'Full Archipelago View Reset',
     'sanctuary'
@@ -523,8 +523,8 @@ menuPillBtns.forEach(btn => {
 
     if (target === 'sanctuary') {
       flyToWaypoint(
-        new THREE.Vector3(18.5, 14.8, 23.5),
-        new THREE.Vector3(0, 5.8, 0),
+        new THREE.Vector3(10.0, 10.8, 32.5),
+        new THREE.Vector3(0, 5.2, 0),
         42,
         'The Sanctuary • Full Archipelago View',
         'sanctuary'
